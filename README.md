@@ -3,7 +3,7 @@
 > A cyberpunk HUD mod for [Claude Code](https://claude.com/claude-code): your context window becomes **RAM**,
 > your 5-hour token limit becomes **HP**, and every tool call turns into a quickhack.
 
-![Version](https://img.shields.io/badge/version-0.1.0-FCEE0A?style=flat-square&labelColor=0A0A14)
+![Version](https://img.shields.io/badge/version-0.2.0-FCEE0A?style=flat-square&labelColor=0A0A14)
 ![License](https://img.shields.io/badge/license-MIT-00F0FF?style=flat-square&labelColor=0A0A14)
 ![Claude Code mod](https://img.shields.io/badge/Claude%20Code-mod-FF003C?style=flat-square&labelColor=0A0A14)
 

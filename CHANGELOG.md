@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-11
+
 ### Added
 
 - Boot sequence in the band when a session starts: netrunner boot steps, a filling progress bar and a `JACK IN` flash.
@@ -31,7 +33,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Changed
 
-- Removed a no-op expression in the HP bar rendering and normalized string quotes.
 - `/nightcity` now shows why the backdrop is not drawn, as reported by Claude Code.
 - The README lists the new features, `/netfx` and the files of the mod.
 - Preview images in `docs/` regenerated for the new look, with a gallery of every effect in the READMEs, made by
@@ -41,10 +42,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 ### Fixed
 
 - `/hud`, `/nightcity` and `/netfx` are now really remembered between sessions, as the README said.
-
-### Documentation
-
-- Stated that the Night City backdrop is not supported by Claude Code yet.
 
 ## [0.1.0] - 2026-11-11
 
@@ -58,5 +55,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Toasts for low RAM, critical HP and limit reset.
 - `/hud` and `/nightcity` commands, persisted between sessions.
 
-[Unreleased]: https://github.com/Mohamed-Hacene/netrunner-hud/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Mohamed-Hacene/netrunner-hud/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Mohamed-Hacene/netrunner-hud/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Mohamed-Hacene/netrunner-hud/releases/tag/v0.1.0
