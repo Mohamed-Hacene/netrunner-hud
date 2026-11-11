@@ -1,0 +1,6 @@
+{
+  "name": "netrunner-hud",
+  "version": "0.1.0",
+  "description": "Cyberpunk-style HUD: 5-hour token limit as HP, context window as RAM, Night City backdrop and quickhack-themed tools",
+  "types": "./types/index.d.ts"
+}
