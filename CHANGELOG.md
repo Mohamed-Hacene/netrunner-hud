@@ -6,6 +6,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-11
+
+### Added
+
+- Settings in Claude Code's config menu: language, number of RAM cells (5 to 10), random event frequency, HP and RAM
+  colors. Claude Code stores them, so updating the mod keeps them.
+- English texts for everything the mod shows (`language: en`).
+- The band's status text has a message for each pair of HP and RAM levels (4 × 4), instead of following the RAM alone.
+- The status line under the prompt says which gauge is critical: RAM, HP or both.
+
+### Changed
+
+- Colors, thresholds and number formatting live in one module, `hooks/theme.ts`, instead of `palette.ts` and copies in
+  two other files. The terminal's dim text and the band's empty cells, which shared one name with two values, now
+  have a name each.
+- Every text the mod shows lives in `hooks/i18n.ts`.
+- RAM levels follow the share of free cells, so they read the same whatever the number of cells.
+
 ## [0.2.0] - 2026-11-11
 
 ### Added
@@ -55,6 +73,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Toasts for low RAM, critical HP and limit reset.
 - `/hud` and `/nightcity` commands, persisted between sessions.
 
-[Unreleased]: https://github.com/Mohamed-Hacene/netrunner-hud/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Mohamed-Hacene/netrunner-hud/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Mohamed-Hacene/netrunner-hud/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Mohamed-Hacene/netrunner-hud/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Mohamed-Hacene/netrunner-hud/releases/tag/v0.1.0

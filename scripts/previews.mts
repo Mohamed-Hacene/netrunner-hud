@@ -17,6 +17,7 @@ const load = async (path: string) => {
 }
 const svg = await load('../hooks/hud-svg.ts')
 const ev = await load('../hooks/events.ts')
+const i18n = await load('../hooks/i18n.ts')
 
 const DOCS = fileURLToPath(new URL('../docs/', import.meta.url))
 const MIN = 60_000
@@ -124,7 +125,7 @@ const atHour = <T,>(hour: number, draw: () => T): T => {
 
 const eventFx = (id: string, elapsedMs: number) => {
   const e = ev.eventById(id)
-  return { id, phases: e.phases, color: e.color, outcome: ev.outcomeColor(e), elapsedMs }
+  return { id, phases: ev.eventPhases(e), color: e.color, outcome: ev.outcomeColor(e), elapsedMs }
 }
 
 const NIGHT = 23
@@ -134,7 +135,7 @@ const previews: Record<string, () => string> = {
   'sky-dawn': () => atHour(8, () => svg.hudSvg(healthy, 'NEURAL LINK STABLE', 20, 10)),
   'sky-day': () => atHour(13, () => svg.hudSvg(healthy, 'NEURAL LINK STABLE', 20, 10)),
   boot: () => svg.bootSvg(svg.BOOT_STEP_MS * 1.8),
-  welcome: () => svg.welcomeSvg(1500, ...svg.WELCOMES[0]),
+  welcome: () => svg.welcomeSvg(1500, ...i18n.t().welcomes[0]),
   glitch: () => svg.hudSvg({ ...critical, hitAt: Date.now() }, 'x', 20, 10, { glitchMs: 40 }),
   'heal-ram': () =>
     svg.hudSvg({ ...healthy, hearts: 9 }, 'x', 20, 10, {

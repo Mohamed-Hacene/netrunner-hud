@@ -2,12 +2,10 @@
 // over a Night City scenery that follows the time of day and reacts to events.
 import type { Reading } from '../types'
 import { EVENT_MS, EVENT_PHASE_MS } from './events'
-import { CYAN, GREEN, MAGENTA, RED, YELLOW } from './palette'
+import { config } from './config'
+import { t } from './i18n'
+import { CELL_OFF, CYAN, GREEN, HP_CRITICAL, HP_WARN, MAGENTA, MUTED, RAM_LOW, RED, YELLOW, fmtK } from './theme'
 
-const HP = '#5EF6E0'
-const RAM = '#3E8EFF'
-const DIM = '#2A2F3A'
-const MUTED = '#B4BCD6'
 /** A dark outline painted under a text, so it stays readable over the scenery. */
 const HALO = 'paint-order="stroke" stroke="#07060F" stroke-opacity="0.85" stroke-width="3" stroke-linejoin="round"'
 const FONT = "Bahnschrift, 'Rajdhani', 'Segoe UI', sans-serif"
@@ -15,7 +13,6 @@ const W = 760
 const H = 46
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-const fmtK = (n: number) => (n >= 1000 ? `${Math.round(n / 1000)}k` : `${n}`)
 /** A SMIL begin time `ms` into an effect that started `elapsedMs` ago. */
 const atMs = (ms: number, elapsedMs: number) => `${((ms - elapsedMs) / 1000).toFixed(3)}s`
 
@@ -32,13 +29,14 @@ const corners = (color = YELLOW) =>
 
 /** "REGEN DANS 2H14" until the 5h window resets. */
 export const regenLabel = (resetsAt: string | null | undefined, now = Date.now()) => {
+  const { regen } = t()
   const at = resetsAt ? Date.parse(resetsAt) : NaN
-  if (Number.isNaN(at)) return 'LIMITE TOKENS · 5H'
+  if (Number.isNaN(at)) return regen.unknown
   const mins = Math.ceil((at - now) / 60_000)
-  if (mins <= 0) return 'REGEN IMMINENTE'
+  if (mins <= 0) return regen.imminent
   const h = Math.floor(mins / 60)
   const m = mins % 60
-  return h > 0 ? `REGEN DANS ${h}H${String(m).padStart(2, '0')}` : `REGEN DANS ${m} MIN`
+  return h > 0 ? regen.inHours(h, String(m).padStart(2, '0')) : regen.inMinutes(m)
 }
 
 const pulse = '<animate attributeName="opacity" values="1;0.35;1" dur="0.9s" repeatCount="indefinite"/>'
@@ -74,9 +72,9 @@ export const hudSvg = (r: Reading, flavor: string, hpMax: number, ramMax: number
   const parts: string[] = [corners()]
 
   // ── HP: what's left of the 5h token limit ──
-  const hpColor = left === null ? MUTED : left <= 20 ? RED : left <= 50 ? YELLOW : HP
+  const hpColor = left === null ? MUTED : left <= HP_CRITICAL ? RED : left <= HP_WARN ? YELLOW : config.hpColor
   const filled = left === null ? 0 : Math.ceil((left / 100) * hpMax)
-  const critical = left !== null && left <= 20
+  const critical = left !== null && left <= HP_CRITICAL
 
   parts.push(`<text x="10" y="25" font-family="${FONT}" font-size="14" font-weight="700" fill="${hpColor}" letter-spacing="1" ${HALO}>HP</text>`)
   const hx = 36
@@ -85,11 +83,11 @@ export const hudSvg = (r: Reading, flavor: string, hpMax: number, ramMax: number
   parts.push(`<g filter="url(#glow)">`)
   for (let i = 0; i < hpMax; i++) {
     const x = hx + i * (segW + gap)
-    if (i >= filled) parts.push(cell(x, 13, segW, 14, DIM))
+    if (i >= filled) parts.push(cell(x, 13, segW, 14, CELL_OFF))
     else if (heal?.kind === 'hp') {
       // refilled one segment after another, in green
       const lit = `<set attributeName="opacity" to="1" begin="${atMs(i * 70, heal.elapsedMs)}" fill="freeze"/>`
-      parts.push(cell(x, 13, segW, 14, DIM) + cell(x, 13, segW, 14, GREEN, 'opacity="0"', lit))
+      parts.push(cell(x, 13, segW, 14, CELL_OFF) + cell(x, 13, segW, 14, GREEN, 'opacity="0"', lit))
     } else parts.push(cell(x, 13, segW, 14, hpColor))
   }
   parts.push(`</g>`)
@@ -100,14 +98,14 @@ export const hudSvg = (r: Reading, flavor: string, hpMax: number, ramMax: number
       `<tspan font-size="20">${left === null ? '--' : Math.round(left)}</tspan>` +
       `<tspan font-size="11" fill="${MUTED}" dx="2">/100</tspan></text>`,
   )
-  parts.push(`<text x="${hx}" y="41" font-family="${FONT}" font-size="10" font-weight="600" fill="${MUTED}" letter-spacing="1.5" ${HALO}>${left === null ? 'SYNCHRO…' : regenLabel(r.resetsAt)}</text>`)
+  parts.push(`<text x="${hx}" y="41" font-family="${FONT}" font-size="10" font-weight="600" fill="${MUTED}" letter-spacing="1.5" ${HALO}>${left === null ? t().band.syncing : regenLabel(r.resetsAt)}</text>`)
 
   // ── divider ──
   const dx = hpEnd + 62
   parts.push(`<line x1="${dx + 5}" y1="8" x2="${dx - 3}" y2="38" stroke="${YELLOW}" stroke-opacity="0.5" stroke-width="1"/>`)
 
   // ── RAM: free context window ──
-  const ramColor = heal?.kind === 'ram' ? GREEN : r.hearts > 2 ? RAM : RED
+  const ramColor = heal?.kind === 'ram' ? GREEN : r.hearts > RAM_LOW ? config.ramColor : RED
   const rx = dx + 14
   parts.push(`<text x="${rx}" y="25" font-family="${FONT}" font-size="14" font-weight="700" fill="${ramColor}" letter-spacing="1" ${HALO}>RAM</text>`)
   const cx = rx + 38
@@ -116,7 +114,7 @@ export const hudSvg = (r: Reading, flavor: string, hpMax: number, ramMax: number
   parts.push(`<g filter="url(#glow)">`)
   for (let i = 0; i < ramMax; i++) {
     const x = cx + i * (cW + cGap)
-    const empty = cell(x, 13, cW, 14, 'none', `stroke="${DIM}" stroke-width="1.2"`)
+    const empty = cell(x, 13, cW, 14, 'none', `stroke="${CELL_OFF}" stroke-width="1.2"`)
     if (i < r.hearts && heal?.kind === 'ram') {
       // refilled one cell after another, in green
       const lit = `<set attributeName="opacity" to="1" begin="${atMs(i * 140, heal.elapsedMs)}" fill="freeze"/>`
@@ -131,7 +129,7 @@ export const hudSvg = (r: Reading, flavor: string, hpMax: number, ramMax: number
     `<text x="${ramEnd}" y="26" font-family="${FONT}" fill="${ramColor}" font-weight="700" ${HALO}>` +
       `<tspan font-size="16">${r.hearts}</tspan><tspan font-size="11" fill="${MUTED}" dx="1">/${ramMax}</tspan></text>`,
   )
-  parts.push(`<text x="${cx}" y="41" font-family="${FONT}" font-size="10" font-weight="600" fill="${MUTED}" letter-spacing="1.5" ${HALO}>CONTEXTE · ${fmtK(r.tokens)} / ${fmtK(r.window)}</text>`)
+  parts.push(`<text x="${cx}" y="41" font-family="${FONT}" font-size="10" font-weight="600" fill="${MUTED}" letter-spacing="1.5" ${HALO}>${t().band.context} · ${fmtK(r.tokens)} / ${fmtK(r.window)}</text>`)
 
   // ── status text: an event, an override, or the flavor with a chromatic glitch ──
   const textAt = (text: string, color: string, extra = '', children = '') =>
@@ -152,7 +150,7 @@ export const hudSvg = (r: Reading, flavor: string, hpMax: number, ramMax: number
   } else if (fx.status) {
     parts.push(textAt(fx.status.text, fx.status.color))
   } else {
-    const fColor = r.hearts <= 2 || critical ? RED : CYAN
+    const fColor = r.hearts <= RAM_LOW || critical ? RED : CYAN
     parts.push(textAt(flavor, RED, 'opacity="0.55" transform="translate(1.2,0)"'))
     parts.push(textAt(flavor, fColor))
   }
@@ -196,8 +194,8 @@ const flatlineSvg = (r: Reading, ramMax: number) => {
     `<text x="${W / 2}" y="20" text-anchor="middle" font-family="${FONT}" font-size="16" font-weight="700" letter-spacing="4" fill="${RED}" ${HALO}>☠ FLATLINE` +
       // a slow blink: the only endless animation, and only while you have no HP left
       `<animate attributeName="opacity" values="1;0.4;1" dur="2.4s" repeatCount="indefinite"/></text>`,
-    `<text x="${W / 2}" y="43" text-anchor="middle" font-family="${FONT}" font-size="10" font-weight="600" letter-spacing="2" fill="${MUTED}" ${HALO}>${regenLabel(r.resetsAt)} · PLUS DE TOKENS</text>`,
-    `<text x="${W - 12}" y="20" text-anchor="end" font-family="${FONT}" font-size="11" font-weight="700" letter-spacing="1" fill="${r.hearts > 2 ? RAM : RED}" ${HALO}>RAM ${r.hearts}/${ramMax}</text>`,
+    `<text x="${W / 2}" y="43" text-anchor="middle" font-family="${FONT}" font-size="10" font-weight="600" letter-spacing="2" fill="${MUTED}" ${HALO}>${regenLabel(r.resetsAt)} · ${t().band.noTokens}</text>`,
+    `<text x="${W - 12}" y="20" text-anchor="end" font-family="${FONT}" font-size="11" font-weight="700" letter-spacing="1" fill="${r.hearts > RAM_LOW ? config.ramColor : RED}" ${HALO}>RAM ${r.hearts}/${ramMax}</text>`,
   ]
   return svgDoc(parts.join('\n'))
 }
@@ -395,10 +393,10 @@ ${body}
 
 /** How long the boot sequence lasts, in ms. */
 export const BOOT_MS = 3200
-/** The boot steps, one after another; "JACK IN" follows the last. */
-export const BOOT_STEPS = ['KIROSHI OS v2.0.77', 'SYNCHRO NEURALE', 'PARE-FEU ICE', 'CONNEXION AU NET']
+/** How many boot steps there are (their texts: `boot` in `i18n.ts`); "JACK IN" follows the last. */
+export const BOOT_STEP_COUNT = 4
 /** Time given to each step (the last slot is the JACK IN flash), in ms. */
-export const BOOT_STEP_MS = BOOT_MS / (BOOT_STEPS.length + 1)
+export const BOOT_STEP_MS = BOOT_MS / (BOOT_STEP_COUNT + 1)
 
 /**
  * The boot sequence as a self-animating SVG.
@@ -410,26 +408,27 @@ export const bootSvg = (elapsedMs: number, cells = 20) => {
   const parts: string[] = [corners()]
 
   // one step at a time: "> LABEL ...... OK"
-  BOOT_STEPS.forEach((label, i) => {
+  const { boot, band } = t()
+  boot.slice(0, BOOT_STEP_COUNT).forEach((label, i) => {
     const start = i * BOOT_STEP_MS
     parts.push(
       `<text x="12" y="28" font-family="${FONT}" font-size="14" font-weight="600" letter-spacing="1.5" fill="${CYAN}" opacity="0">` +
         `&gt; ${esc(label)} <tspan fill="${MUTED}">${'.'.repeat(Math.max(3, 24 - label.length))}</tspan>` +
-        `<tspan fill="${HP}" dx="6" opacity="0">OK<set attributeName="opacity" to="1" begin="${at(start + BOOT_STEP_MS * 0.55)}" dur="${(BOOT_STEP_MS * 0.45) / 1000}s"/></tspan>` +
+        `<tspan fill="${config.hpColor}" dx="6" opacity="0">OK<set attributeName="opacity" to="1" begin="${at(start + BOOT_STEP_MS * 0.55)}" dur="${(BOOT_STEP_MS * 0.45) / 1000}s"/></tspan>` +
         `<set attributeName="opacity" to="1" begin="${at(start)}" dur="${stepS}"/></text>`,
     )
   })
   parts.push(
-    `<text x="12" y="29" font-family="${FONT}" font-size="18" font-weight="700" letter-spacing="4" fill="${YELLOW}" opacity="0" filter="url(#glow)">◢ JACK IN ◣` +
-      `<set attributeName="opacity" to="1" begin="${at(BOOT_STEPS.length * BOOT_STEP_MS)}" fill="freeze"/>` +
-      `<animate attributeName="fill-opacity" values="1;0.3;1;0.6;1" dur="0.4s" begin="${at(BOOT_STEPS.length * BOOT_STEP_MS)}" fill="freeze"/></text>`,
+    `<text x="12" y="29" font-family="${FONT}" font-size="18" font-weight="700" letter-spacing="4" fill="${YELLOW}" opacity="0" filter="url(#glow)">${band.jackIn}` +
+      `<set attributeName="opacity" to="1" begin="${at(BOOT_STEP_COUNT * BOOT_STEP_MS)}" fill="freeze"/>` +
+      `<animate attributeName="fill-opacity" values="1;0.3;1;0.6;1" dur="0.4s" begin="${at(BOOT_STEP_COUNT * BOOT_STEP_MS)}" fill="freeze"/></text>`,
   )
 
   // progress bar filling over the whole boot
   const px = 400
   const segW = 12
   const gap = 3
-  parts.push(`<text x="${px}" y="41" font-family="${FONT}" font-size="10" font-weight="600" fill="${MUTED}" letter-spacing="1.5" ${HALO}>CONNEXION NEURALE</text>`)
+  parts.push(`<text x="${px}" y="41" font-family="${FONT}" font-size="10" font-weight="600" fill="${MUTED}" letter-spacing="1.5" ${HALO}>${band.neuralLink}</text>`)
   parts.push(`<g filter="url(#glow)">`)
   for (let i = 0; i < cells; i++) {
     const x = px + i * (segW + gap)
@@ -451,14 +450,8 @@ export const bootSvg = (elapsedMs: number, cells = 20) => {
 
 /** How long the welcome message stays, in ms. */
 export const WELCOME_MS = 3000
-/** One is picked at random each session: a title and a line under it. */
-export const WELCOMES: readonly (readonly [string, string])[] = [
-  ['BIENVENUE À NIGHT CITY, CHOOM', 'LIAISON NEURALE ÉTABLIE · BONNE CHASSE SUR LE NET'],
-  ['CONNEXION ÉTABLIE', 'LE NET T’ATTENDAIT, NETRUNNER'],
-  ['JACK IN RÉUSSI', 'TOUS LES SYSTÈMES AU VERT · ICE EN VEILLE'],
-  ['DE RETOUR SUR LE NET', 'CYBERDECK CHAUD · QUICKHACKS CHARGÉS'],
-  ['LA NUIT EST JEUNE, CHOOM', 'NIGHT CITY NE DORT JAMAIS · TOI NON PLUS'],
-]
+/** How many welcome messages there are (their texts: `welcomes` in `i18n.ts`). */
+export const WELCOME_COUNT = 5
 
 /**
  * The welcome message as a self-animating SVG: typed in, held, faded out.

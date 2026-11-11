@@ -1,9 +1,54 @@
 {
   "name": "netrunner-hud",
-  "version": "0.2.0",
-  "author": { "name": "Mohamed-Hacene" },
+  "version": "0.3.0",
+  "author": {
+    "name": "Mohamed-Hacene"
+  },
   "license": "MIT",
   "repository": "https://github.com/Mohamed-Hacene/netrunner-hud",
   "description": "Cyberpunk-style HUD: 5-hour token limit as HP, context window as RAM, Night City backdrop and quickhack-themed tools",
-  "types": "./types/index.d.ts"
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "language": {
+      "type": "string",
+      "title": "Language / Langue",
+      "description": "Language of the HUD, the events and the transcript headers: fr or en",
+      "default": "fr",
+      "options": [
+        "fr",
+        "en"
+      ]
+    },
+    "ramCells": {
+      "type": "number",
+      "title": "RAM cells",
+      "description": "Number of RAM cells in the band (5 to 10)",
+      "default": 10,
+      "min": 5,
+      "max": 10
+    },
+    "eventFrequency": {
+      "type": "string",
+      "title": "Random events",
+      "description": "How often random Net events play: rare, normal or frequent (/netfx turns them off)",
+      "default": "normal",
+      "options": [
+        "rare",
+        "normal",
+        "frequent"
+      ]
+    },
+    "hpColor": {
+      "type": "string",
+      "title": "HP color",
+      "description": "Color of the HP bar, as #RRGGBB",
+      "default": "#5EF6E0"
+    },
+    "ramColor": {
+      "type": "string",
+      "title": "RAM color",
+      "description": "Color of the RAM cells, as #RRGGBB",
+      "default": "#3E8EFF"
+    }
+  }
 }

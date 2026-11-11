@@ -24,4 +24,4 @@ For a bug, include your surface (desktop app or terminal), your Claude Code vers
 - TypeScript, 2-space indentation, single quotes, no semicolons (see [.editorconfig](.editorconfig)).
 - Keep the mod dependency-free: everything is plain TypeScript and inline SVG.
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat: …`, `fix: …`).
-- User-facing texts are in French for now. Keep new texts consistent with the existing tone.
+- User-facing texts live in `hooks/i18n.ts`, in French and English: add each new text to both, in the existing tone.

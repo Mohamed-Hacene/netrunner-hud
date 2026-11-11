@@ -3,26 +3,15 @@
 // the transcript), no timer, and a fixed amount of work per row.
 import type { On } from 'claude-code'
 
-import { CYAN, RED, YELLOW } from './palette'
+import { t } from './i18n'
+import { CYAN, DIM_TEXT, RED, YELLOW } from './theme'
 
-const DIM = '#5A5A6E'
 const OWN_COMMANDS = new Set(['hud', 'nightcity', 'netfx'])
 
 // Past-tense words for the line that closes a turn ("Breached for 12s")
 const TURN_WORDS = ['Breached', 'Decrypted', 'Jacked in', 'Overclocked', 'Uplinked', 'Netrunned']
 
-// Footer mode labels; unknown ones are upper-cased with a chevron
-const MODE_NAMES: Record<string, string> = {
-  focus: '◢ FOCUS NEURAL',
-  'memory paused': '◢ MÉMOIRE GELÉE',
-}
-
-// Dim tail after the hint line under the prompt (terminal only)
-const HINT_IDLE = ['⟁ jack in, choom', '⟁ le Net t’attend', '⟁ ICE en veille']
-const HINT_WORKING = ['⟁ netrunning…', '⟁ daemon actif', '⟁ breach en cours']
-
-// Headers above Claude's replies, picked from the reply itself so a redraw keeps the same one
-const REPLY_HEADERS = ['TRANSMISSION ENTRANTE', 'FLUX DÉCRYPTÉ', 'SIGNAL CAPTÉ', 'PAQUET REÇU', 'LIAISON ÉTABLIE']
+// Footer mode labels, hint tails, reply headers and the other texts: `ambiance` in `i18n.ts`.
 
 export const pick = (list: readonly string[]) => list[Math.floor(Date.now() / 4000) % list.length] ?? list[0] ?? ''
 
@@ -41,12 +30,12 @@ export const registerAmbiance = (on: On) => {
 
   // ── Footer mode labels ──
   on('ui.render', { component: 'SessionMode' }, ($, e, next) =>
-    next({ ...e, props: { ...e.props, modes: e.props.modes.map(m => MODE_NAMES[m] ?? `◢ ${m.toUpperCase()}`) } }),
+    next({ ...e, props: { ...e.props, modes: e.props.modes.map(m => t().ambiance.modes[m] ?? `◢ ${m.toUpperCase()}`) } }),
   )
 
   // ── Hint line under the prompt: a dim tail, the engine's own line kept (terminal) ──
   on('ui.render', { component: 'PromptHint' }, ($, e, next) =>
-    next({ ...e, props: { ...e.props, tail: pick(e.props.isWorking ? HINT_WORKING : HINT_IDLE) } }),
+    next({ ...e, props: { ...e.props, tail: pick(e.props.isWorking ? t().ambiance.hintWorking : t().ambiance.hintIdle) } }),
   )
 
   // ── Claude's replies: a channel header above the first block of each reply ──
@@ -56,10 +45,11 @@ export const registerAmbiance = (on: On) => {
     const { Box, Text } = $.ui.resolve(e)
     const h = hash(e.props.text)
     const channel = (h & 0xffff).toString(16).toUpperCase().padStart(4, '0')
+    const { replyHeaders, channel: channelWord } = t().ambiance
     return (
       <Box flexDirection="column">
         <Text color={CYAN} size="caption" mono>
-          {`◢ ${REPLY_HEADERS[h % REPLY_HEADERS.length]} · CANAL ${channel}`}
+          {`◢ ${replyHeaders[h % replyHeaders.length]} · ${channelWord} ${channel}`}
         </Text>
         {row}
       </Box>
@@ -73,7 +63,7 @@ export const registerAmbiance = (on: On) => {
     const { Box, Text } = $.ui.resolve(e)
     return (
       <Box flexDirection="column">
-        <Text color={YELLOW} size="caption" mono>◤ UPLINK ÉMIS</Text>
+        <Text color={YELLOW} size="caption" mono>{t().ambiance.uplink}</Text>
         {row}
       </Box>
     )
@@ -86,8 +76,8 @@ export const registerAmbiance = (on: On) => {
     const { Box, Text } = $.ui.resolve(e)
     return (
       <Box flexDirection="column">
-        <Text color={e.props.isActive ? YELLOW : DIM} size="caption" mono>
-          {`◢ SÉQUENCE DE QUICKHACKS ×${e.props.calls.length}`}
+        <Text color={e.props.isActive ? YELLOW : DIM_TEXT} size="caption" mono>
+          {t().ambiance.sequence(e.props.calls.length)}
         </Text>
         {row}
       </Box>
@@ -113,7 +103,7 @@ export const registerAmbiance = (on: On) => {
     const { Box, Text } = $.ui.resolve(e)
     return (
       <Box flexDirection="column">
-        <Text color={RED} weight="bold" mono>⚠ REQUÊTE NETWATCH — RÉPONSE REQUISE</Text>
+        <Text color={RED} weight="bold" mono>{t().ambiance.netwatch}</Text>
         {node}
       </Box>
     )

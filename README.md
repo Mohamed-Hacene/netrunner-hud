@@ -3,7 +3,7 @@
 > A cyberpunk HUD mod for [Claude Code](https://claude.com/claude-code): your context window becomes **RAM**,
 > your 5-hour token limit becomes **HP**, and every tool call turns into a quickhack.
 
-![Version](https://img.shields.io/badge/version-0.2.0-FCEE0A?style=flat-square&labelColor=0A0A14)
+![Version](https://img.shields.io/badge/version-0.3.0-FCEE0A?style=flat-square&labelColor=0A0A14)
 ![License](https://img.shields.io/badge/license-MIT-00F0FF?style=flat-square&labelColor=0A0A14)
 ![Claude Code mod](https://img.shields.io/badge/Claude%20Code-mod-FF003C?style=flat-square&labelColor=0A0A14)
 
@@ -22,7 +22,8 @@
 - **HP**: what is left of your 5-hour token limit, with a countdown until it regenerates (`REGEN DANS 2H14`).
   Turns yellow below 50 and red, pulsing, below 20.
 - **RAM**: 10 cells showing your free context window (`CONTEXTE · 64k / 200k`). The cell you just lost flashes red.
-- **Status line** that follows your state: `NEURAL LINK STABLE`, `SURCHAUFFE CYBERDECK`, `☠ FLATLINE`…
+- **Status text** for every pair of HP and RAM levels (16 in all): `NEURAL LINK STABLE`, `RÉSERVES ENTAMÉES` when HP
+  drops, `SURCHAUFFE CYBERDECK` when RAM fills, `☠ AU BORD DU FLATLINE` when both are critical…
 - Drawn as SVG on desktop (slanted segments, glow, chromatic glitch), plain text in the terminal.
 - **Night City scenery** behind the band (desktop): skyline, lit windows, horizon glow, faded into the app. The sky
   follows the time of day: night (19h–7h), dawn (7h–10h), smog by day (10h–16h), dusk (16h–19h).
@@ -71,7 +72,7 @@ duration and the modes.
 **Light on resources**: only the band redraws when it animates, never the transcript; desktop animations run inside
 the SVG.
 
-> The in-app texts are in French. See [Customization](#customization) to translate them.
+> The in-app texts are in French by default. Set `language` to `en` in [Settings](#settings) to get them in English.
 
 ## Gallery
 
@@ -169,6 +170,28 @@ To uninstall, delete the `~/.claude/mods/netrunner-hud` folder.
 
 All three settings are remembered between sessions.
 
+## Settings
+
+Change them in Claude Code's config menu (`/config` in the terminal), under netrunner-hud. A change reloads the mod.
+
+| Setting | Values | Default |
+|---|---|---|
+| `language` | `fr`, `en` | `fr` |
+| `ramCells` | number of RAM cells, 5 to 10 | `10` |
+| `eventFrequency` | random events: `rare`, `normal`, `frequent` (`/netfx` turns them off) | `normal` |
+| `hpColor` | color of the HP bar, `#RRGGBB` | `#5EF6E0` |
+| `ramColor` | color of the RAM cells, `#RRGGBB` | `#3E8EFF` |
+
+Where there is no config menu (the desktop app), write them in `~/.claude/settings.json`:
+
+```json
+"pluginConfigs": {
+  "netrunner-hud": { "options": { "language": "en", "ramCells": 8 } }
+}
+```
+
+They are stored by Claude Code, not in the mod's folder, so updating the mod keeps them.
+
 ## How it works
 
 | Hook | What the mod does |
@@ -187,10 +210,13 @@ All three settings are remembered between sessions.
 .claude-plugin/plugin.json   # mod manifest (name, version, description)
 hooks/hooks.json             # entry point, loads register.tsx
 hooks/register.tsx           # state, commands, theme, band rendering, effects, quickhacks, toasts
+hooks/config.ts              # the settings, checked and with their defaults
 hooks/hud-svg.ts             # band SVG (desktop): HUD, scenery, boot, welcome, flatline, effects
 hooks/ambiance.tsx           # netrunner dressing for the transcript and the prompt's footer
 hooks/events.ts              # random, legendary and keyword events
-hooks/palette.ts             # shared colors
+hooks/flavor.ts              # status texts from the HP and RAM levels
+hooks/theme.ts               # colors, thresholds, number formatting
+hooks/i18n.ts                # every text the mod shows, in French and English
 hooks/backdrop.ts            # Night City backdrop as SVG
 types/index.d.ts             # Reading type and the mod's persisted state
 docs/                        # preview images used in this README
@@ -199,20 +225,17 @@ scripts/previews.mts         # regenerates the previews in docs/ (npx tsx script
 
 ## Customization
 
-Everything lives in a few constants:
+Language, number of cells, event frequency and the HP / RAM colors are [Settings](#settings). For the rest, edit
+these files (an update of the mod overwrites them):
 
 | What | Where |
 |---|---|
-| Colors | `hooks/palette.ts`, top of `hooks/register.tsx` and `hooks/hud-svg.ts` |
-| Events, keywords, frequency | `hooks/events.ts` |
-| Welcome messages, boot steps | `WELCOMES` and `BOOT_STEPS` in `hooks/hud-svg.ts` |
+| Every text: status texts (`flavor.grid`), toasts, events, welcome messages, boot steps, spinner, transcript headers | `hooks/i18n.ts` |
+| Other colors, thresholds | `hooks/theme.ts` |
+| Events, keywords | `hooks/events.ts` |
 | Scenery skies by time of day | `SKIES` and `skyAt()` in `hooks/hud-svg.ts` |
-| Transcript headers, modes, hint line | `hooks/ambiance.tsx` |
-| Number of RAM cells | `MAX` in `hooks/register.tsx` |
 | Quickhack names | `QUICKHACK` in `hooks/register.tsx` |
-| Spinner words | `SPIN_WORDS` in `hooks/register.tsx` |
-| Status lines and thresholds | `flavor()` in `hooks/register.tsx` |
-| Toast messages | `session.measure` handler in `hooks/register.tsx` |
+| Words on the turn duration | `TURN_WORDS` in `hooks/ambiance.tsx` |
 | Skyline, sun, grid | `hooks/backdrop.ts` |
 
 ## Contributing

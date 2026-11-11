@@ -18,7 +18,9 @@
 - **HP** : ce qui reste de la limite de tokens sur 5 h, avec le compte à rebours avant la régénération
   (`REGEN DANS 2H14`). Passe au jaune sous 50, au rouge et clignote sous 20.
 - **RAM** : 10 cellules pour le contexte libre (`CONTEXTE · 64k / 200k`). La cellule qui vient de sauter s'affiche en rouge.
-- **Texte d'ambiance** selon l'état : `NEURAL LINK STABLE`, `SURCHAUFFE CYBERDECK`, `☠ FLATLINE`…
+- **Texte d'ambiance** pour chaque combinaison de niveaux HP et RAM (16 en tout) : `NEURAL LINK STABLE`,
+  `RÉSERVES ENTAMÉES` quand les HP baissent, `SURCHAUFFE CYBERDECK` quand la RAM se remplit, `☠ AU BORD DU FLATLINE`
+  quand les deux sont critiques…
 - Rendu SVG dans l'app de bureau (segments inclinés, lueur, glitch chromatique), version texte dans le terminal.
 - **Décor Night City** derrière la barre (app de bureau) : skyline, fenêtres allumées, lueur à l'horizon, fondu dans
   l'app. Le ciel suit l'heure : nuit (19 h–7 h), aube (7 h–10 h), smog en journée (10 h–16 h), crépuscule (16 h–19 h).
@@ -147,20 +149,42 @@ Pour désinstaller, supprimer le dossier `~/.claude/mods/netrunner-hud`.
 
 Les trois réglages sont conservés d'une session à l'autre.
 
+## Réglages
+
+À changer dans le menu de config de Claude Code (`/config` dans le terminal), rubrique netrunner-hud. Un changement
+recharge le mod.
+
+| Réglage | Valeurs | Par défaut |
+|---|---|---|
+| `language` | `fr`, `en` | `fr` |
+| `ramCells` | nombre de cellules de RAM, de 5 à 10 | `10` |
+| `eventFrequency` | évènements aléatoires : `rare`, `normal`, `frequent` (`/netfx` les coupe) | `normal` |
+| `hpColor` | couleur de la barre HP, `#RRGGBB` | `#5EF6E0` |
+| `ramColor` | couleur des cellules de RAM, `#RRGGBB` | `#3E8EFF` |
+
+Là où il n'y a pas de menu de config (l'app desktop), écris-les dans `~/.claude/settings.json` :
+
+```json
+"pluginConfigs": {
+  "netrunner-hud": { "options": { "language": "en", "ramCells": 8 } }
+}
+```
+
+Ils sont gardés par Claude Code, pas dans le dossier du mod : une mise à jour du mod les conserve.
+
 ## Personnalisation
+
+La langue, le nombre de cellules, la fréquence des évènements et les couleurs HP / RAM sont des
+[Réglages](#réglages). Pour le reste, modifie ces fichiers (une mise à jour du mod les écrase) :
 
 | Quoi | Où |
 |---|---|
-| Couleurs | `hooks/palette.ts`, en tête de `hooks/register.tsx` et `hooks/hud-svg.ts` |
-| Évènements, mots-clés, fréquence | `hooks/events.ts` |
-| Messages de bienvenue, étapes du boot | `WELCOMES` et `BOOT_STEPS` dans `hooks/hud-svg.ts` |
+| Tous les textes : textes d'ambiance (`flavor.grid`), notifications, évènements, bienvenue, boot, indicateur, en-têtes du fil | `hooks/i18n.ts` |
+| Autres couleurs, paliers | `hooks/theme.ts` |
+| Évènements, mots-clés | `hooks/events.ts` |
 | Ciels du décor selon l'heure | `SKIES` et `skyAt()` dans `hooks/hud-svg.ts` |
-| En-têtes du fil, modes, ligne d'aide | `hooks/ambiance.tsx` |
-| Nombre de cellules de RAM | `MAX` dans `hooks/register.tsx` |
 | Noms des quickhacks | `QUICKHACK` dans `hooks/register.tsx` |
-| Textes de l'indicateur | `SPIN_WORDS` dans `hooks/register.tsx` |
-| Textes d'ambiance et paliers | `flavor()` dans `hooks/register.tsx` |
-| Notifications | gestionnaire `session.measure` dans `hooks/register.tsx` |
+| Mots de la durée du tour | `TURN_WORDS` dans `hooks/ambiance.tsx` |
 | Skyline, soleil, grille | `hooks/backdrop.ts` |
 
 ## Contribuer
