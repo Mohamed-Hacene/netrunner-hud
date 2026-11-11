@@ -9,6 +9,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 ### Added
 
 - Boot sequence in the band when a session starts: netrunner boot steps, a filling progress bar and a `JACK IN` flash.
+- A welcome message after the boot sequence, picked at random each session.
+- Night City scenery (skyline, horizon glow, scanlines) behind the band on desktop, drawn once and static.
 - Damage glitch: the band shakes and splits into red / cyan for a moment when you lose a RAM cell or drop into a lower
   tens of HP (desktop); the terminal shows `SIGNAL CORROMPU` instead.
 - Netrunner past-tense words on the line that closes a turn (`Breached for 12s`).

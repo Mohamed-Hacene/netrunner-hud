@@ -14,7 +14,7 @@ import {
   randomEvent,
   type NetEvent,
 } from './events'
-import { BOOT_MS, BOOT_STEPS, BOOT_STEP_MS, GLITCH_MS, bootSvg, hudSvg } from './hud-svg'
+import { BOOT_MS, BOOT_STEPS, BOOT_STEP_MS, GLITCH_MS, WELCOMES, WELCOME_MS, bootSvg, hudSvg, welcomeSvg } from './hud-svg'
 import { CYAN, RED, YELLOW } from './palette'
 
 // ── Session state ──
@@ -103,7 +103,15 @@ const startBoot = async ($: EngineInterface) => {
     if (i > 0) $.clock.after(i * BOOT_STEP_MS, () => redrawBand($))
     $.clock.after(i * BOOT_STEP_MS + BOOT_STEP_MS * 0.6, () => redrawBand($))
   }
-  $.clock.after(BOOT_MS + 20, () => void update($, fx, v => (v?.kind === 'boot' ? null : v)))
+  $.clock.after(BOOT_MS + 20, () => void startWelcome($))
+}
+
+// ── Welcome message, right after the boot ──
+const startWelcome = async ($: EngineInterface) => {
+  const index = Math.floor(Math.random() * WELCOMES.length)
+  const swapped = await update($, fx, v => (v?.kind === 'boot' ? { kind: 'welcome' as const, id: String(index), startedAt: Date.now() } : v))
+  if (swapped?.kind !== 'welcome') return
+  $.clock.after(WELCOME_MS + 20, () => void update($, fx, v => (v?.kind === 'welcome' ? null : v)))
 }
 
 let lastEventAt = 0
@@ -299,6 +307,29 @@ export const register: Register = on => {
             <Text color={CYAN}>{'█'.repeat(filled)}</Text>
             <Text color={DIM}>{'░'.repeat(20 - filled)}</Text>
             <Text color={CYAN} tabular>{` ${Math.round((filled / 20) * 100)}%`.padStart(5)}</Text>
+          </Text>
+        </Box>
+      )
+    }
+
+    // ── welcome message, right after the boot ──
+    const welcome = play?.kind === 'welcome' && playMs < WELCOME_MS ? WELCOMES[Number(play.id)] : undefined
+    if (welcome) {
+      const [title, subtitle] = welcome
+      if (e.surface === 'desktop' && 'Svg' in els) {
+        const { Svg } = els
+        return (
+          <Box>
+            <Svg source={welcomeSvg(playMs, title, subtitle)} alt={`${title}. ${subtitle}`} />
+          </Box>
+        )
+      }
+      return (
+        <Box>
+          <Text mono>
+            <Text color={YELLOW} weight="bold">{`◢ ${title} ◣`}</Text>
+            <Text color={DIM}>{'  │  '}</Text>
+            <Text color={CYAN}>{subtitle}</Text>
           </Text>
         </Box>
       )

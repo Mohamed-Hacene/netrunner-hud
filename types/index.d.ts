@@ -15,8 +15,8 @@ export type Reading = {
   hitAt?: number | null
 }
 
-/** What plays in the band: the boot sequence, or a random event by its id. */
-export type Fx = { kind: 'boot' | 'event'; id: string; startedAt: number }
+/** What plays in the band: the boot sequence, the welcome message (by its index) or a random event (by its id). */
+export type Fx = { kind: 'boot' | 'welcome' | 'event'; id: string; startedAt: number }
 
 declare module 'claude-code' {
   interface PluginState {

@@ -6,7 +6,9 @@ import { CYAN, RED, YELLOW } from './palette'
 const HP = '#5EF6E0'
 const RAM = '#3E8EFF'
 const DIM = '#2A2F3A'
-const MUTED = '#6B7280'
+const MUTED = '#B4BCD6'
+/** A dark outline painted under a text, so it stays readable over the scenery. */
+const HALO = 'paint-order="stroke" stroke="#07060F" stroke-opacity="0.85" stroke-width="3" stroke-linejoin="round"'
 const FONT = "Bahnschrift, 'Rajdhani', 'Segoe UI', sans-serif"
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -60,7 +62,7 @@ export const hudSvg = (r: Reading, flavor: string, hpMax: number, ramMax: number
   const filled = left === null ? 0 : Math.ceil((left / 100) * hpMax)
   const critical = left !== null && left <= 20
 
-  parts.push(`<text x="10" y="25" font-family="${FONT}" font-size="14" font-weight="700" fill="${hpColor}" letter-spacing="1">HP</text>`)
+  parts.push(`<text x="10" y="25" font-family="${FONT}" font-size="14" font-weight="700" fill="${hpColor}" letter-spacing="1" ${HALO}>HP</text>`)
   const hx = 36
   const segW = 8
   const gap = 2
@@ -73,11 +75,11 @@ export const hudSvg = (r: Reading, flavor: string, hpMax: number, ramMax: number
   if (critical) parts.push(`<g opacity="1">${pulse}<rect x="${hx - 2}" y="11" width="${hpMax * (segW + gap) + 6}" height="18" fill="none" stroke="${RED}" stroke-width="1"/></g>`)
   const hpEnd = hx + hpMax * (segW + gap) + 8
   parts.push(
-    `<text x="${hpEnd}" y="27" font-family="${FONT}" fill="${hpColor}" font-weight="700">` +
+    `<text x="${hpEnd}" y="27" font-family="${FONT}" fill="${hpColor}" font-weight="700" ${HALO}>` +
       `<tspan font-size="20">${left === null ? '--' : Math.round(left)}</tspan>` +
       `<tspan font-size="11" fill="${MUTED}" dx="2">/100</tspan></text>`,
   )
-  parts.push(`<text x="${hx}" y="41" font-family="${FONT}" font-size="9" fill="${MUTED}" letter-spacing="1.5">${left === null ? 'SYNCHRO…' : regenLabel(r.resetsAt)}</text>`)
+  parts.push(`<text x="${hx}" y="41" font-family="${FONT}" font-size="10" font-weight="600" fill="${MUTED}" letter-spacing="1.5" ${HALO}>${left === null ? 'SYNCHRO…' : regenLabel(r.resetsAt)}</text>`)
 
   // ── divider ──
   const dx = hpEnd + 62
@@ -86,7 +88,7 @@ export const hudSvg = (r: Reading, flavor: string, hpMax: number, ramMax: number
   // ── RAM: free context window ──
   const ramColor = r.hearts > 2 ? RAM : RED
   const rx = dx + 14
-  parts.push(`<text x="${rx}" y="25" font-family="${FONT}" font-size="14" font-weight="700" fill="${ramColor}" letter-spacing="1">RAM</text>`)
+  parts.push(`<text x="${rx}" y="25" font-family="${FONT}" font-size="14" font-weight="700" fill="${ramColor}" letter-spacing="1" ${HALO}>RAM</text>`)
   const cx = rx + 38
   const cW = 11
   const cGap = 4
@@ -100,14 +102,14 @@ export const hudSvg = (r: Reading, flavor: string, hpMax: number, ramMax: number
   parts.push(`</g>`)
   const ramEnd = cx + ramMax * (cW + cGap) + 6
   parts.push(
-    `<text x="${ramEnd}" y="26" font-family="${FONT}" fill="${ramColor}" font-weight="700">` +
+    `<text x="${ramEnd}" y="26" font-family="${FONT}" fill="${ramColor}" font-weight="700" ${HALO}>` +
       `<tspan font-size="16">${r.hearts}</tspan><tspan font-size="11" fill="${MUTED}" dx="1">/${ramMax}</tspan></text>`,
   )
-  parts.push(`<text x="${cx}" y="41" font-family="${FONT}" font-size="9" fill="${MUTED}" letter-spacing="1.5">CONTEXTE · ${fmtK(r.tokens)} / ${fmtK(r.window)}</text>`)
+  parts.push(`<text x="${cx}" y="41" font-family="${FONT}" font-size="10" font-weight="600" fill="${MUTED}" letter-spacing="1.5" ${HALO}>CONTEXTE · ${fmtK(r.tokens)} / ${fmtK(r.window)}</text>`)
 
   // ── flavor text with chromatic glitch, or the random event playing ──
   const textAt = (text: string, color: string, extra = '', children = '') =>
-    `<text x="${W - 12}" y="27" text-anchor="end" font-family="${FONT}" font-size="12" font-weight="600" letter-spacing="1" fill="${color}" ${extra}>${esc(text)}${children}</text>`
+    `<text x="${W - 12}" y="27" text-anchor="end" font-family="${FONT}" font-size="12" font-weight="600" letter-spacing="1" fill="${color}" ${HALO} ${extra}>${esc(text)}${children}</text>`
   if (fx.event) {
     const { phases, color, elapsedMs } = fx.event
     const at = (ms: number) => `${((ms - elapsedMs) / 1000).toFixed(3)}s`
@@ -147,14 +149,88 @@ export const hudSvg = (r: Reading, flavor: string, hpMax: number, ramMax: number
   return svgDoc(W, H, `<g filter="url(#nr-chroma)">${jitter}\n${body}\n</g>`, chroma)
 }
 
+// ── Night City scenery behind the band ──
+// Built once when the module loads and static: no animation runs while the band is on screen.
+const SCENERY = ((W: number, H: number) => {
+  let seed = 2077
+  const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280
+  const far: string[] = []
+  const near: string[] = []
+  // far skyline, faint
+  for (let x = 0; x < W; ) {
+    const w = 10 + Math.floor(rnd() * 22)
+    const h = 10 + Math.floor(rnd() * 22)
+    far.push(`<rect x="${x}" y="${H - h}" width="${w}" height="${h}"/>`)
+    x += w + 1
+  }
+  // near skyline with a few lit windows and antenna lights
+  for (let x = 0; x < W; ) {
+    const w = 14 + Math.floor(rnd() * 30)
+    const h = 6 + Math.floor(rnd() * 16)
+    near.push(`<rect x="${x}" y="${H - h}" width="${w}" height="${h}" fill="#150C2A"/>`)
+    for (let i = 0; i < 3; i++) {
+      if (rnd() > 0.6) {
+        const wx = x + 2 + Math.floor(rnd() * Math.max(1, w - 4))
+        const wy = H - h + 2 + Math.floor(rnd() * Math.max(1, h - 4))
+        near.push(`<rect x="${wx}" y="${wy}" width="1.5" height="2" fill="${rnd() > 0.5 ? CYAN : YELLOW}" opacity="0.8"/>`)
+      }
+    }
+    if (rnd() > 0.85) near.push(`<rect x="${x + w / 2}" y="${H - h - 5}" width="1" height="5" fill="${RED}" opacity="0.9"/>`)
+    x += w + Math.floor(rnd() * 4)
+  }
+  return {
+    defs: `<linearGradient id="nr-sky" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#0E0B24"/>
+    <stop offset="0.6" stop-color="#2A0F3E"/>
+    <stop offset="1" stop-color="#5E0F45"/>
+  </linearGradient>
+  <linearGradient id="nr-haze" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#05050C" stop-opacity="0.2"/>
+    <stop offset="0.5" stop-color="#05050C" stop-opacity="0.05"/>
+    <stop offset="1" stop-color="#05050C" stop-opacity="0.2"/>
+  </linearGradient>
+  <linearGradient id="nr-fade-x" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#000"/>
+    <stop offset="0.1" stop-color="#fff"/>
+    <stop offset="0.9" stop-color="#fff"/>
+    <stop offset="1" stop-color="#000"/>
+  </linearGradient>
+  <linearGradient id="nr-fade-y" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#000"/>
+    <stop offset="0.45" stop-color="#fff"/>
+    <stop offset="1" stop-color="#fff"/>
+  </linearGradient>
+  <mask id="nr-mask-x" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}">
+    <rect width="${W}" height="${H}" fill="url(#nr-fade-x)"/>
+  </mask>
+  <mask id="nr-mask-y" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}">
+    <rect width="${W}" height="${H}" fill="url(#nr-fade-y)"/>
+  </mask>
+  <pattern id="nr-lines" width="3" height="3" patternUnits="userSpaceOnUse">
+    <rect width="3" height="1" fill="#000" opacity="0.15"/>
+  </pattern>`,
+    body: `<g mask="url(#nr-mask-x)"><g mask="url(#nr-mask-y)">
+<rect width="${W}" height="${H}" fill="url(#nr-sky)"/>
+<circle cx="${W * 0.62}" cy="${H + 4}" r="24" fill="${RED}" opacity="0.35"/>
+<g fill="#3A2160" opacity="0.85">${far.join('')}</g>
+<line x1="0" y1="${H - 0.5}" x2="${W}" y2="${H - 0.5}" stroke="#FF2A6D" stroke-opacity="0.8"/>
+<g>${near.join('')}</g>
+<rect width="${W}" height="${H}" fill="url(#nr-haze)"/>
+<rect width="${W}" height="${H}" fill="url(#nr-lines)"/>
+</g></g>`,
+  }
+})(760, 46)
+
 const svgDoc = (W: number, H: number, body: string, defs = '') => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
 <defs>
   <filter id="glow" x="-10%" y="-50%" width="120%" height="200%">
     <feGaussianBlur stdDeviation="1.6" result="b"/>
     <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
   </filter>
+  ${SCENERY.defs}
   ${defs}
 </defs>
+${SCENERY.body}
 ${body}
 </svg>`
 
@@ -201,7 +277,7 @@ export const bootSvg = (elapsedMs: number, cells = 20) => {
   const px = 400
   const segW = 12
   const gap = 3
-  parts.push(`<text x="${px}" y="41" font-family="${FONT}" font-size="9" fill="${MUTED}" letter-spacing="1.5">CONNEXION NEURALE</text>`)
+  parts.push(`<text x="${px}" y="41" font-family="${FONT}" font-size="10" font-weight="600" fill="${MUTED}" letter-spacing="1.5" ${HALO}>CONNEXION NEURALE</text>`)
   parts.push(`<g filter="url(#glow)">`)
   for (let i = 0; i < cells; i++) {
     const x = px + i * (segW + gap)
@@ -217,4 +293,41 @@ export const bootSvg = (elapsedMs: number, cells = 20) => {
   )
 
   return svgDoc(W, H, parts.join('\n'))
+}
+
+// ── Welcome message shown after the boot sequence ──
+
+/** How long the welcome message stays, in ms. */
+export const WELCOME_MS = 3000
+/** One is picked at random each session: a title and a line under it. */
+export const WELCOMES: readonly (readonly [string, string])[] = [
+  ['BIENVENUE À NIGHT CITY, CHOOM', 'LIAISON NEURALE ÉTABLIE · BONNE CHASSE SUR LE NET'],
+  ['CONNEXION ÉTABLIE', 'LE NET T’ATTENDAIT, NETRUNNER'],
+  ['JACK IN RÉUSSI', 'TOUS LES SYSTÈMES AU VERT · ICE EN VEILLE'],
+  ['DE RETOUR SUR LE NET', 'CYBERDECK CHAUD · QUICKHACKS CHARGÉS'],
+  ['LA NUIT EST JEUNE, CHOOM', 'NIGHT CITY NE DORT JAMAIS · TOI NON PLUS'],
+]
+
+/**
+ * The welcome message as a self-animating SVG: typed in, held, faded out.
+ * @param elapsedMs time since it started; SMIL times are shifted by it so a redraw resumes it.
+ */
+export const welcomeSvg = (elapsedMs: number, title: string, subtitle: string) => {
+  const W = 760
+  const H = 46
+  const begin = `${(-elapsedMs / 1000).toFixed(3)}s`
+  const parts: string[] = []
+  parts.push(`<path d="M1 10 V1 H14" stroke="${YELLOW}" stroke-width="1.5" fill="none"/>`)
+  parts.push(`<path d="M${W - 1} ${H - 10} V${H - 1} H${W - 14}" stroke="${YELLOW}" stroke-width="1.5" fill="none"/>`)
+  parts.push(
+    `<g clip-path="url(#nr-type)" opacity="0">` +
+      `<animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.85;1" dur="${WELCOME_MS / 1000}s" begin="${begin}" fill="freeze"/>` +
+      `<text x="${W / 2}" y="24" text-anchor="middle" font-family="${FONT}" font-size="17" font-weight="700" letter-spacing="3" fill="${YELLOW}" filter="url(#glow)">${esc(title)}</text>` +
+      `<text x="${W / 2}" y="39" text-anchor="middle" font-family="${FONT}" font-size="10" font-weight="600" letter-spacing="2" fill="${CYAN}" ${HALO}>${esc(subtitle)}</text>` +
+      `</g>`,
+  )
+  // the text is typed in from the left
+  const clip = `<clipPath id="nr-type"><rect x="0" y="0" width="0" height="${H}">` +
+    `<animate attributeName="width" values="0;${W}" dur="0.7s" begin="${begin}" fill="freeze"/></rect></clipPath>`
+  return svgDoc(W, H, parts.join('\n'), clip)
 }
