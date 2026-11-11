@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 46" width="760" height="46">
+<defs>
+  <filter id="glow" x="-10%" y="-50%" width="120%" height="200%">
+    <feGaussianBlur stdDeviation="1.6" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <linearGradient id="nr-haze" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#05050C" stop-opacity="0.2"/>
+    <stop offset="0.5" stop-color="#05050C" stop-opacity="0.05"/>
+    <stop offset="1" stop-color="#05050C" stop-opacity="0.2"/>
+  </linearGradient>
+  <linearGradient id="nr-fade-x" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#000"/>
+    <stop offset="0.1" stop-color="#fff"/>
+    <stop offset="0.9" stop-color="#fff"/>
+    <stop offset="1" stop-color="#000"/>
+  </linearGradient>
+  <linearGradient id="nr-fade-y" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#000"/>
+    <stop offset="0.45" stop-color="#fff"/>
+    <stop offset="1" stop-color="#fff"/>
+  </linearGradient>
+  <mask id="nr-mask-x" maskUnits="userSpaceOnUse" x="0" y="0" width="760" height="46">
+    <rect width="760" height="46" fill="url(#nr-fade-x)"/>
+  </mask>
+  <mask id="nr-mask-y" maskUnits="userSpaceOnUse" x="0" y="0" width="760" height="46">
+    <rect width="760" height="46" fill="url(#nr-fade-y)"/>
+  </mask>
+  <pattern id="nr-lines" width="3" height="3" patternUnits="userSpaceOnUse">
+    <rect width="3" height="1" fill="#000" opacity="0.15"/>
+  </pattern>
+  <linearGradient id="nr-sweep-c" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#00F0FF" stop-opacity="0"/>
+    <stop offset="0.8" stop-color="#00F0FF" stop-opacity="0.35"/>
+    <stop offset="1" stop-color="#00F0FF" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="nr-sweep-g" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#39FF88" stop-opacity="0"/>
+    <stop offset="0.8" stop-color="#39FF88" stop-opacity="0.4"/>
+    <stop offset="1" stop-color="#39FF88" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="nr-sky" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#2C3346"/>
+    <stop offset="0.6" stop-color="#4F5568"/>
+    <stop offset="1" stop-color="#7D6F68"/>
+  </linearGradient>
+  
+</defs>
+<g mask="url(#nr-mask-x)"><g mask="url(#nr-mask-y)">
+<rect width="760" height="46" fill="url(#nr-sky)"/>
+<circle cx="471.2" cy="50" r="24" fill="#C9A27A" opacity="0.25"/>
+<g fill="#5A5F70" opacity="0.85"><rect x="0" y="17" width="10" height="29"/><rect x="11" y="29" width="28" height="17"/><rect x="40" y="26" width="13" height="20"/><rect x="54" y="25" width="15" height="21"/><rect x="70" y="33" width="16" height="13"/><rect x="87" y="20" width="17" height="26"/><rect x="105" y="36" width="20" height="10"/><rect x="126" y="23" width="14" height="23"/><rect x="141" y="35" width="10" height="11"/><rect x="152" y="20" width="10" height="26"/><rect x="163" y="35" width="28" height="11"/><rect x="192" y="17" width="23" height="29"/><rect x="216" y="15" width="14" height="31"/><rect x="231" y="18" width="22" height="28"/><rect x="254" y="27" width="18" height="19"/><rect x="273" y="33" width="18" height="13"/><rect x="292" y="30" width="27" height="16"/><rect x="320" y="35" width="25" height="11"/><rect x="346" y="26" width="30" height="20"/><rect x="377" y="21" width="26" height="25"/><rect x="404" y="33" width="30" height="13"/><rect x="435" y="28" width="11" height="18"/><rect x="447" y="26" width="27" height="20"/><rect x="475" y="36" width="17" height="10"/><rect x="493" y="33" width="15" height="13"/><rect x="509" y="17" width="16" height="29"/><rect x="526" y="15" width="16" height="31"/><rect x="543" y="33" width="26" height="13"/><rect x="570" y="31" width="21" height="15"/><rect x="592" y="28" width="13" height="18"/><rect x="606" y="21" width="29" height="25"/><rect x="636" y="15" width="29" height="31"/><rect x="666" y="25" width="15" height="21"/><rect x="682" y="34" width="10" height="12"/><rect x="693" y="28" width="25" height="18"/><rect x="719" y="19" width="28" height="27"/><rect x="748" y="20" width="20" height="26"/></g>
+<line x1="0" y1="45.5" x2="760" y2="45.5" stroke="#FF2A6D" stroke-opacity="0.8"/>
+<g fill="#22252F"><rect x="0" y="29" width="22" height="17"/><rect x="25" y="40" width="26" height="6"/><rect x="51" y="32" width="26" height="14"/><rect x="80" y="39" width="22" height="7"/><rect x="104" y="38" width="36" height="8"/><rect x="142" y="34" width="23" height="12"/><rect x="168" y="37" width="37" height="9"/><rect x="206" y="36" width="31" height="10"/><rect x="238" y="26" width="26" height="20"/><rect x="267" y="26" width="41" height="20"/><rect x="311" y="32" width="38" height="14"/><rect x="350" y="27" width="16" height="19"/><rect x="366" y="36" width="21" height="10"/><rect x="390" y="36" width="20" height="10"/><rect x="411" y="39" width="29" height="7"/><rect x="441" y="38" width="27" height="8"/><rect x="468" y="40" width="21" height="6"/><rect x="492" y="33" width="28" height="13"/><rect x="522" y="36" width="34" height="10"/><rect x="557" y="28" width="16" height="18"/><rect x="575" y="36" width="16" height="10"/><rect x="594" y="31" width="31" height="15"/><rect x="627" y="39" width="22" height="7"/><rect x="651" y="40" width="40" height="6"/><rect x="694" y="28" width="31" height="18"/><rect x="725" y="29" width="40" height="17"/></g>
+<g opacity="0.35"><rect x="42" y="42" width="1.5" height="2" fill="#FCEE0A"/><rect x="33" y="43" width="1.5" height="2" fill="#FCEE0A"/><rect x="70" y="41" width="1.5" height="2" fill="#FCEE0A"/><rect x="85" y="43" width="1.5" height="2" fill="#00F0FF"/><rect x="108" y="41" width="1.5" height="2" fill="#00F0FF"/><rect x="121" y="41" width="1.5" height="2" fill="#FCEE0A"/><rect x="130" y="40" width="1.5" height="2" fill="#FCEE0A"/><rect x="211" y="39" width="1.5" height="2" fill="#00F0FF"/><rect x="252" y="37" width="1.5" height="2" fill="#FCEE0A"/><rect x="259" y="35" width="1.5" height="2" fill="#00F0FF"/><rect x="300" y="34" width="1.5" height="2" fill="#00F0FF"/><rect x="300" y="29" width="1.5" height="2" fill="#FCEE0A"/><rect x="277" y="28" width="1.5" height="2" fill="#FCEE0A"/><rect x="370" y="38" width="1.5" height="2" fill="#FCEE0A"/><rect x="394" y="42" width="1.5" height="2" fill="#FCEE0A"/><rect x="426" y="41" width="1.5" height="2" fill="#00F0FF"/><rect x="460" y="40" width="1.5" height="2" fill="#00F0FF"/><rect x="473" y="42" width="1.5" height="2" fill="#FCEE0A"/><rect x="478" y="42" width="1.5" height="2" fill="#FCEE0A"/><rect x="515" y="38" width="1.5" height="2" fill="#FCEE0A"/><rect x="551" y="38" width="1.5" height="2" fill="#00F0FF"/><rect x="564" y="38" width="1.5" height="2" fill="#FCEE0A"/><rect x="570" y="41" width="1.5" height="2" fill="#00F0FF"/><rect x="584" y="39" width="1.5" height="2" fill="#00F0FF"/><rect x="603" y="34" width="1.5" height="2" fill="#00F0FF"/><rect x="637" y="43" width="1.5" height="2" fill="#FCEE0A"/><rect x="640" y="41" width="1.5" height="2" fill="#FCEE0A"/><rect x="679" y="43" width="1.5" height="2" fill="#00F0FF"/><rect x="654" y="42" width="1.5" height="2" fill="#00F0FF"/><rect x="720" y="37" width="1.5" height="2" fill="#FCEE0A"/><rect x="733" y="41" width="1.5" height="2" fill="#00F0FF"/></g>
+<g fill="#FF003C" opacity="0.9"><rect x="11" y="24" width="1" height="5"/><rect x="38" y="35" width="1" height="5"/><rect x="122" y="33" width="1" height="5"/><rect x="251" y="21" width="1" height="5"/><rect x="425.5" y="34" width="1" height="5"/><rect x="583" y="31" width="1" height="5"/><rect x="609.5" y="26" width="1" height="5"/></g>
+
+<rect width="760" height="46" fill="url(#nr-haze)"/>
+<rect width="760" height="46" fill="url(#nr-lines)"/>
+</g></g>
+<path d="M1 10 V1 H14" stroke="#FCEE0A" stroke-width="1.5" fill="none"/><path d="M759 36 V45 H746" stroke="#FCEE0A" stroke-width="1.5" fill="none"/>
+<text x="10" y="25" font-family="Bahnschrift, 'Rajdhani', 'Segoe UI', sans-serif" font-size="14" font-weight="700" fill="#5EF6E0" letter-spacing="1" paint-order="stroke" stroke="#07060F" stroke-opacity="0.85" stroke-width="3" stroke-linejoin="round">HP</text>
+<g filter="url(#glow)">
+<polygon points="40.9,13 48.9,13 44,27 36,27" fill="#5EF6E0"/>
+<polygon points="50.9,13 58.9,13 54,27 46,27" fill="#5EF6E0"/>
+<polygon points="60.9,13 68.9,13 64,27 56,27" fill="#5EF6E0"/>
+<polygon points="70.9,13 78.9,13 74,27 66,27" fill="#5EF6E0"/>
+<polygon points="80.9,13 88.9,13 84,27 76,27" fill="#5EF6E0"/>
+<polygon points="90.9,13 98.9,13 94,27 86,27" fill="#5EF6E0"/>
+<polygon points="100.9,13 108.9,13 104,27 96,27" fill="#5EF6E0"/>
+<polygon points="110.9,13 118.9,13 114,27 106,27" fill="#5EF6E0"/>
+<polygon points="120.9,13 128.9,13 124,27 116,27" fill="#5EF6E0"/>
+<polygon points="130.9,13 138.9,13 134,27 126,27" fill="#5EF6E0"/>
+<polygon points="140.9,13 148.9,13 144,27 136,27" fill="#5EF6E0"/>
+<polygon points="150.9,13 158.9,13 154,27 146,27" fill="#5EF6E0"/>
+<polygon points="160.9,13 168.9,13 164,27 156,27" fill="#5EF6E0"/>
+<polygon points="170.9,13 178.9,13 174,27 166,27" fill="#5EF6E0"/>
+<polygon points="180.9,13 188.9,13 184,27 176,27" fill="#5EF6E0"/>
+<polygon points="190.9,13 198.9,13 194,27 186,27" fill="#2A2F3A"/>
+<polygon points="200.9,13 208.9,13 204,27 196,27" fill="#2A2F3A"/>
+<polygon points="210.9,13 218.9,13 214,27 206,27" fill="#2A2F3A"/>
+<polygon points="220.9,13 228.9,13 224,27 216,27" fill="#2A2F3A"/>
+<polygon points="230.9,13 238.9,13 234,27 226,27" fill="#2A2F3A"/>
+</g>
+<text x="244" y="27" font-family="Bahnschrift, 'Rajdhani', 'Segoe UI', sans-serif" fill="#5EF6E0" font-weight="700" paint-order="stroke" stroke="#07060F" stroke-opacity="0.85" stroke-width="3" stroke-linejoin="round"><tspan font-size="20">72</tspan><tspan font-size="11" fill="#B4BCD6" dx="2">/100</tspan></text>
+<text x="36" y="41" font-family="Bahnschrift, 'Rajdhani', 'Segoe UI', sans-serif" font-size="10" font-weight="600" fill="#B4BCD6" letter-spacing="1.5" paint-order="stroke" stroke="#07060F" stroke-opacity="0.85" stroke-width="3" stroke-linejoin="round">REGEN DANS 2H14</text>
+<line x1="311" y1="8" x2="303" y2="38" stroke="#FCEE0A" stroke-opacity="0.5" stroke-width="1"/>
+<text x="320" y="25" font-family="Bahnschrift, 'Rajdhani', 'Segoe UI', sans-serif" font-size="14" font-weight="700" fill="#3E8EFF" letter-spacing="1" paint-order="stroke" stroke="#07060F" stroke-opacity="0.85" stroke-width="3" stroke-linejoin="round">RAM</text>
+<g filter="url(#glow)">
+<polygon points="362.9,13 373.9,13 369,27 358,27" fill="#3E8EFF"/>
+<polygon points="377.9,13 388.9,13 384,27 373,27" fill="#3E8EFF"/>
+<polygon points="392.9,13 403.9,13 399,27 388,27" fill="#3E8EFF"/>
+<polygon points="407.9,13 418.9,13 414,27 403,27" fill="#3E8EFF"/>
+<polygon points="422.9,13 433.9,13 429,27 418,27" fill="#3E8EFF"/>
+<polygon points="437.9,13 448.9,13 444,27 433,27" fill="#3E8EFF"/>
+<polygon points="452.9,13 463.9,13 459,27 448,27" fill="#3E8EFF"/>
+<polygon points="467.9,13 478.9,13 474,27 463,27" fill="none" stroke="#2A2F3A" stroke-width="1.2"/>
+<polygon points="482.9,13 493.9,13 489,27 478,27" fill="none" stroke="#2A2F3A" stroke-width="1.2"/>
+<polygon points="497.9,13 508.9,13 504,27 493,27" fill="none" stroke="#2A2F3A" stroke-width="1.2"/>
+</g>
+<text x="514" y="26" font-family="Bahnschrift, 'Rajdhani', 'Segoe UI', sans-serif" fill="#3E8EFF" font-weight="700" paint-order="stroke" stroke="#07060F" stroke-opacity="0.85" stroke-width="3" stroke-linejoin="round"><tspan font-size="16">7</tspan><tspan font-size="11" fill="#B4BCD6" dx="1">/10</tspan></text>
+<text x="358" y="41" font-family="Bahnschrift, 'Rajdhani', 'Segoe UI', sans-serif" font-size="10" font-weight="600" fill="#B4BCD6" letter-spacing="1.5" paint-order="stroke" stroke="#07060F" stroke-opacity="0.85" stroke-width="3" stroke-linejoin="round">CONTEXTE · 64k / 200k</text>
+<text x="748" y="27" text-anchor="end" font-family="Bahnschrift, 'Rajdhani', 'Segoe UI', sans-serif" font-size="12" font-weight="600" letter-spacing="1" fill="#FF003C" paint-order="stroke" stroke="#07060F" stroke-opacity="0.85" stroke-width="3" stroke-linejoin="round" opacity="0.55" transform="translate(1.2,0)">NEURAL LINK STABLE</text>
+<text x="748" y="27" text-anchor="end" font-family="Bahnschrift, 'Rajdhani', 'Segoe UI', sans-serif" font-size="12" font-weight="600" letter-spacing="1" fill="#00F0FF" paint-order="stroke" stroke="#07060F" stroke-opacity="0.85" stroke-width="3" stroke-linejoin="round">NEURAL LINK STABLE</text>
+</svg>

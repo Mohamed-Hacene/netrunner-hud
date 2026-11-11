@@ -14,7 +14,8 @@ For a bug, include your surface (desktop app or terminal), your Claude Code vers
 2. Create a branch: `git checkout -b feat/my-change`.
 3. Make your change, then start a new Claude Code session to load it. Check both the desktop app and the terminal
    when you touch the band.
-4. If you change how the band or the backdrop looks, regenerate the preview images in `docs/`.
+4. If you change how the band looks, regenerate the preview images in `docs/` with `npx tsx scripts/previews.mts`
+   (add a preview there for a new effect). The Night City backdrop image is not generated.
 5. Add a line under `[Unreleased]` in [CHANGELOG.md](CHANGELOG.md).
 6. Open a pull request describing what changed and why, with a before / after screenshot for visual changes.
 

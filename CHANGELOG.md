@@ -10,6 +10,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 - Boot sequence in the band when a session starts: netrunner boot steps, a filling progress bar and a `JACK IN` flash.
 - A welcome message after the boot sequence, picked at random each session.
+- The scenery follows the time of day: night, dawn and dusk, smog by day.
+- RIPPERDOC healing: after `/compact`, RAM cells refill one by one in green; when the 5h limit resets, HP do too.
+- FLATLINE screen at 0 HP: a flat heart monitor until the limit resets.
+- A cyan sweep across the band at the end of each reply.
+- The city reacts to events: red windows on an intrusion, a Netwatch searchlight, flickering windows on a surge,
+  acid rain.
+- Rare legendary events, and hidden events played by keywords in your prompts.
 - Night City scenery (skyline, horizon glow, scanlines) behind the band on desktop, drawn once and static.
 - Damage glitch: the band shakes and splits into red / cyan for a moment when you lose a RAM cell or drop into a lower
   tens of HP (desktop); the terminal shows `SIGNAL CORROMPU` instead.
@@ -26,7 +33,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 - Removed a no-op expression in the HP bar rendering and normalized string quotes.
 - `/nightcity` now shows why the backdrop is not drawn, as reported by Claude Code.
+- The README lists the new features, `/netfx` and the files of the mod.
+- Preview images in `docs/` regenerated for the new look, with a gallery of every effect in the READMEs, made by
+  `scripts/previews.mts`.
 - The band no longer redraws the whole transcript: the countdown, the boot sequence and the effects redraw the band alone.
+
+### Fixed
+
+- `/hud`, `/nightcity` and `/netfx` are now really remembered between sessions, as the README said.
 
 ### Documentation
 

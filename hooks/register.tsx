@@ -1,7 +1,7 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
-import type { Reading } from '../types'
+import type { Fx, Reading } from '../types'
 import { pick, registerAmbiance } from './ambiance'
 import { NIGHT_CITY_SVG } from './backdrop'
 import {
@@ -10,12 +10,27 @@ import {
   EVENT_MS,
   EVENT_PHASE_MS,
   eventById,
+  keywordEvent,
+  outcomeColor,
   phaseAt,
   randomEvent,
   type NetEvent,
 } from './events'
-import { BOOT_MS, BOOT_STEPS, BOOT_STEP_MS, GLITCH_MS, WELCOMES, WELCOME_MS, bootSvg, hudSvg, welcomeSvg } from './hud-svg'
-import { CYAN, RED, YELLOW } from './palette'
+import {
+  BOOT_MS,
+  BOOT_STEPS,
+  BOOT_STEP_MS,
+  GLITCH_MS,
+  HEAL_MS,
+  SWEEP_MS,
+  WELCOMES,
+  WELCOME_MS,
+  bootSvg,
+  hudSvg,
+  regenLabel,
+  welcomeSvg,
+} from './hud-svg'
+import { CYAN, GREEN, RED, YELLOW } from './palette'
 
 // ── Session state ──
 // The band animates through these values rather than `$.ui.invalidate`: a write redraws only what
@@ -25,7 +40,7 @@ const reading = atom({ plugin: 'netrunner-hud', key: 'reading' } as const, null)
 const isHidden = atom({ plugin: 'netrunner-hud', key: 'isHidden' } as const, false)
 const isThemeOff = atom({ plugin: 'netrunner-hud', key: 'isThemeOff' } as const, false)
 const isFxOff = atom({ plugin: 'netrunner-hud', key: 'isFxOff' } as const, false)
-/** The boot sequence or random event playing in the band, if any. */
+/** What plays in the band (boot, welcome, event, healing, end-of-reply sweep), if anything. */
 const fx = atom({ plugin: 'netrunner-hud', key: 'fx' } as const, null)
 /** Read by the band alone: bumping it redraws the band and nothing else. */
 const frame = atom({ plugin: 'netrunner-hud', key: 'frame' } as const, 0)
@@ -114,14 +129,25 @@ const startWelcome = async ($: EngineInterface) => {
   $.clock.after(WELCOME_MS + 20, () => void update($, fx, v => (v?.kind === 'welcome' ? null : v)))
 }
 
+/**
+ * Plays an effect in the band for `durMs`, unless something else plays there already: it may only
+ * replace what `over` names. Resolves whether it plays. Its end clears it, and that write redraws the band.
+ */
+const playFx = async ($: EngineInterface, kind: Fx['kind'], id: string, durMs: number, over: readonly Fx['kind'][]) => {
+  const startedAt = Date.now()
+  const now = await update($, fx, v => (v === null || over.includes(v.kind) ? { kind, id, startedAt } : v))
+  if (now?.startedAt !== startedAt || now.kind !== kind) return false
+  $.clock.after(durMs + 20, () => void update($, fx, v => (v?.startedAt === startedAt && v.kind === kind ? null : v)))
+  return true
+}
+
 let lastEventAt = 0
 const startEvent = async ($: EngineInterface, ev: NetEvent) => {
+  if (!(await playFx($, 'event', ev.id, EVENT_MS, ['sweep']))) return
   lastEventAt = Date.now()
-  await update($, fx, () => ({ kind: 'event', id: ev.id, startedAt: Date.now() }))
   $.clock.after(GLITCH_MS + 20, () => redrawBand($))
   $.clock.after(EVENT_PHASE_MS, () => redrawBand($))
   $.clock.after(2 * EVENT_PHASE_MS, () => redrawBand($))
-  $.clock.after(EVENT_MS + 20, () => void update($, fx, v => (v?.kind === 'event' && v.id === ev.id ? null : v)))
 }
 
 const minuteTick = async ($: EngineInterface) => {
@@ -140,6 +166,14 @@ export const register: Register = on => {
     await $.command.register({ name: 'hud', description: 'Afficher / masquer la barre RAM Netrunner' })
     await $.command.register({ name: 'nightcity', description: 'Activer / couper le fond Night City' })
     await $.command.register({ name: 'netfx', description: 'Activer / couper les évènements aléatoires du Net' })
+    // settings kept between sessions
+    const storedHidden = await $.store.get('isHidden')
+    if (typeof storedHidden === 'boolean') await update($, isHidden, () => storedHidden)
+    const storedThemeOff = await $.store.get('isThemeOff')
+    if (typeof storedThemeOff === 'boolean') await update($, isThemeOff, () => storedThemeOff)
+    const storedFxOff = await $.store.get('isFxOff')
+    if (typeof storedFxOff === 'boolean') await update($, isFxOff, () => storedFxOff)
+
     if (!(await read($, isThemeOff))) await applyTheme($)
     if (!(await read($, isHidden))) setStatus($, statusFor(await read($, reading)))
     $.clock.every(60_000, () => void minuteTick($))
@@ -150,12 +184,14 @@ export const register: Register = on => {
 
   on('command.run', { command: 'hud' }, async $ => {
     const hidden = await update($, isHidden, v => !v)
+    await $.store.set('isHidden', hidden)
     setStatus($, hidden ? undefined : statusFor(await read($, reading)))
     return { text: hidden ? 'HUD Netrunner masqué.' : 'HUD Netrunner affiché.' }
   })
 
   on('command.run', { command: 'nightcity' }, async $ => {
     const off = await update($, isThemeOff, v => !v)
+    await $.store.set('isThemeOff', off)
     if (off) {
       await $.theme.clear()
       return { text: 'Night City déconnecté.' }
@@ -170,9 +206,26 @@ export const register: Register = on => {
 
   on('command.run', { command: 'netfx' }, async $ => {
     const off = await update($, isFxOff, v => !v)
+    await $.store.set('isFxOff', off)
     if (off) return { text: 'Évènements aléatoires coupés.' }
-    if ((await read($, fx)) === null) await startEvent($, randomEvent())
+    await startEvent($, randomEvent())
     return { text: 'Évènements aléatoires activés. Le Net s’agite…' }
+  })
+
+  // ── End of a reply: a light bar crosses the band ──
+  on('turn.complete', async ($, e, next) => {
+    const done = await next(e)
+    if (!('agentId' in e && e.agentId)) void playFx($, 'sweep', 'turn', SWEEP_MS, ['sweep'])
+    return done
+  })
+
+  // ── Hidden keywords in your prompt play an event ──
+  on('prompt.submit', async ($, e, next) => {
+    if (e.origin.kind === 'composer' && !e.command && !(await read($, isFxOff))) {
+      const ev = keywordEvent(e.text)
+      if (ev) void startEvent($, ev)
+    }
+    return next(e)
   })
 
   // ── Background: Night City skyline (desktop / mobile) ──
@@ -246,6 +299,11 @@ export const register: Register = on => {
     // redraw once the damage glitch is over, so it does not stay in the band
     if (hurt) $.clock.after(GLITCH_MS + 50, () => redrawBand($))
     if (!(await read($, isHidden))) setStatus($, statusFor(fresh))
+
+    // healing: a /compact that frees 3 cells or more, or the 5h limit resetting
+    const hpRestored = hpNow !== null && hpBefore !== null && hpNow > hpBefore + 20
+    if (hpRestored) void playFx($, 'heal-hp', 'hp', HEAL_MS, ['sweep', 'event'])
+    else if (prev !== null && hearts - prev.hearts >= 3) void playFx($, 'heal-ram', 'ram', HEAL_MS, ['sweep', 'event'])
 
     if (prev !== null) {
       // RAM (context)
@@ -338,6 +396,16 @@ export const register: Register = on => {
     const r = await read($, reading)
     if (r === null) return next(e)
     const event = play?.kind === 'event' && playMs < EVENT_MS ? eventById(play.id) : undefined
+    const heal =
+      (play?.kind === 'heal-ram' || play?.kind === 'heal-hp') && playMs < HEAL_MS
+        ? { kind: play.kind === 'heal-ram' ? ('ram' as const) : ('hp' as const), elapsedMs: playMs }
+        : null
+    const sweepMs = play?.kind === 'sweep' && playMs < SWEEP_MS ? playMs : null
+    const status = heal
+      ? { text: heal.kind === 'ram' ? '✚ RIPPERDOC · RAM RECHARGÉE' : '✚ RIPPERDOC · HP RESTAURÉS', color: GREEN }
+      : sweepMs !== null
+        ? { text: '◆ BREACH COMPLETE', color: CYAN }
+        : null
     const sinceHit = r.hitAt == null ? Number.POSITIVE_INFINITY : Date.now() - r.hitAt
     const isHit = sinceHit < GLITCH_MS
     // a hit glitches the band, and so does the start of an event
@@ -350,12 +418,32 @@ export const register: Register = on => {
         <Box>
           <Svg source={hudSvg(r, flavor(r.hearts, r.percent), 20, MAX, {
               glitchMs,
-              event: event ? { phases: event.phases, color: event.color, elapsedMs: playMs } : null,
+              event: event
+                ? { id: event.id, phases: event.phases, color: event.color, outcome: outcomeColor(event), elapsedMs: playMs }
+                : null,
+              heal,
+              sweepMs,
+              status,
             })} alt={`${label}, RAM ${r.hearts} sur ${MAX}`} />
         </Box>
       )
     }
     const sep = <Text color={DIM}>{'  │  '}</Text>
+
+    // FLATLINE: no HP left until the 5h window resets
+    if (r.stamina !== null && r.stamina >= 100) {
+      return (
+        <Box>
+          <Text mono>
+            <Text color={RED} weight="bold">☠ FLATLINE </Text>
+            <Text color={RED}>{'─'.repeat(3)}╱╲{'─'.repeat(20)}</Text>
+            <Text color={DIM}>{` ${regenLabel(r.resetsAt)}`}</Text>
+            {sep}
+            <Text color={r.hearts > 2 ? RAM_COLOR : RED}>{`RAM ${r.hearts}/${MAX}`}</Text>
+          </Text>
+        </Box>
+      )
+    }
 
     // HP bar — what is LEFT of the 5-hour token limit, drains as you code
     const HP_CELLS = 20
@@ -370,7 +458,7 @@ export const register: Register = on => {
     } else {
       const left = Math.max(0, Math.min(100, 100 - r.stamina))
       const filled = Math.max(0, Math.min(HP_CELLS, Math.ceil((left / 100) * HP_CELLS)))
-      const c = left <= 20 ? RED : left <= 50 ? YELLOW : HP_COLOR
+      const c = heal?.kind === 'hp' ? GREEN : left <= 20 ? RED : left <= 50 ? YELLOW : HP_COLOR
       hpBar = (
         <Text>
           <Text color={c} weight="bold">HP </Text>
@@ -383,7 +471,7 @@ export const register: Register = on => {
     }
 
     // RAM cells — free context window
-    const ramColor = r.hearts > 2 ? RAM_COLOR : RED
+    const ramColor = heal?.kind === 'ram' ? GREEN : r.hearts > 2 ? RAM_COLOR : RED
     const cells = Array.from({ length: MAX }, (_, i) => {
       if (i < r.hearts) return <Text key={`r${i}`} color={ramColor}>▮</Text>
       if (i === r.burst) return <Text key={`r${i}`} color={RED} weight="bold">✸</Text>
@@ -401,9 +489,11 @@ export const register: Register = on => {
           <Text color={DIM} tabular>{` (${fmtK(r.tokens)}/${fmtK(r.window)})`}</Text>
           {sep}
           {event ? (
-            <Text color={phaseAt(playMs) === 2 ? CYAN : event.color} weight="bold">
+            <Text color={phaseAt(playMs) === 2 ? outcomeColor(event) : event.color} weight="bold">
               {event.phases[phaseAt(playMs)]}
             </Text>
+          ) : status ? (
+            <Text color={status.color} weight="bold">{status.text}</Text>
           ) : isHit ? (
             <Text color={RED} weight="bold">▚▞ SIGNAL CORROMPU ▞▚</Text>
           ) : (
