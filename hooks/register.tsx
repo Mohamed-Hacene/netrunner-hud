@@ -2,19 +2,40 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import type { Reading } from '../types'
+import { pick, registerAmbiance } from './ambiance'
 import { NIGHT_CITY_SVG } from './backdrop'
-import { hudSvg } from './hud-svg'
+import {
+  EVENT_CHANCE,
+  EVENT_COOLDOWN_MS,
+  EVENT_MS,
+  EVENT_PHASE_MS,
+  eventById,
+  phaseAt,
+  randomEvent,
+  type NetEvent,
+} from './events'
+import { BOOT_MS, BOOT_STEPS, BOOT_STEP_MS, GLITCH_MS, bootSvg, hudSvg } from './hud-svg'
+import { CYAN, RED, YELLOW } from './palette'
 
+// ── Session state ──
+// The band animates through these values rather than `$.ui.invalidate`: a write redraws only what
+// reads the value (the band), never the transcript. They stay in this file: the engine reads the
+// state a module uses from the module itself.
 const reading = atom({ plugin: 'netrunner-hud', key: 'reading' } as const, null)
 const isHidden = atom({ plugin: 'netrunner-hud', key: 'isHidden' } as const, false)
 const isThemeOff = atom({ plugin: 'netrunner-hud', key: 'isThemeOff' } as const, false)
+const isFxOff = atom({ plugin: 'netrunner-hud', key: 'isFxOff' } as const, false)
+/** The boot sequence or random event playing in the band, if any. */
+const fx = atom({ plugin: 'netrunner-hud', key: 'fx' } as const, null)
+/** Read by the band alone: bumping it redraws the band and nothing else. */
+const frame = atom({ plugin: 'netrunner-hud', key: 'frame' } as const, 0)
+
+function redrawBand($: EngineInterface) {
+  void update($, frame, n => n + 1)
+}
 
 const MAX = 10
 const BACKDROP = 'night-city'
-// Night City palette
-const YELLOW = '#FCEE0A'
-const CYAN = '#00F0FF'
-const RED = '#FF003C'
 const DIM = '#5A5A6E'
 const HP_COLOR = '#5EF6E0' // teal HP bar
 const RAM_COLOR = '#3E8EFF' // blue RAM cells
@@ -51,7 +72,6 @@ const SPIN_WORDS: Record<string, string[]> = {
   'tool-input': ['Chargement quickhack'],
   'tool-use': ['Quickhack en cours', 'Daemon actif'],
 }
-const pick = (list: string[]) => list[Math.floor(Date.now() / 4000) % list.length] ?? list[0] ?? ''
 
 const applyTheme = async ($: EngineInterface) => {
   return $.theme.set({
@@ -63,18 +83,66 @@ const applyTheme = async ($: EngineInterface) => {
   })
 }
 
+// ── Status line under the prompt: set only when its text changes ──
+let lastStatus: string | undefined
+const setStatus = ($: EngineInterface, text: string | undefined) => {
+  if (text === lastStatus) return
+  lastStatus = text
+  $.ui.status(text)
+}
+const statusFor = (r: Reading | null) =>
+  r !== null && (r.hearts <= 2 || (r.stamina !== null && r.stamina >= 80))
+    ? '⚠ ICE ACTIF · TRACE NETWATCH EN COURS'
+    : '◢ NETRUNNER ONLINE · ICE PASSIF'
+
+// ── Boot sequence and random events, played in the band ──
+// The desktop band animates itself (SMIL); these few redraws only step the terminal's text.
+const startBoot = async ($: EngineInterface) => {
+  await update($, fx, () => ({ kind: 'boot', id: 'boot', startedAt: Date.now() }))
+  for (let i = 0; i <= BOOT_STEPS.length; i++) {
+    if (i > 0) $.clock.after(i * BOOT_STEP_MS, () => redrawBand($))
+    $.clock.after(i * BOOT_STEP_MS + BOOT_STEP_MS * 0.6, () => redrawBand($))
+  }
+  $.clock.after(BOOT_MS + 20, () => void update($, fx, v => (v?.kind === 'boot' ? null : v)))
+}
+
+let lastEventAt = 0
+const startEvent = async ($: EngineInterface, ev: NetEvent) => {
+  lastEventAt = Date.now()
+  await update($, fx, () => ({ kind: 'event', id: ev.id, startedAt: Date.now() }))
+  $.clock.after(GLITCH_MS + 20, () => redrawBand($))
+  $.clock.after(EVENT_PHASE_MS, () => redrawBand($))
+  $.clock.after(2 * EVENT_PHASE_MS, () => redrawBand($))
+  $.clock.after(EVENT_MS + 20, () => void update($, fx, v => (v?.kind === 'event' && v.id === ev.id ? null : v)))
+}
+
+const minuteTick = async ($: EngineInterface) => {
+  // keep the regen countdown current
+  if ((await read($, reading))?.resetsAt) redrawBand($)
+  // maybe a random event
+  if ((await read($, isFxOff)) || (await read($, isHidden)) || (await read($, fx)) !== null) return
+  if (Date.now() - lastEventAt < EVENT_COOLDOWN_MS || Math.random() >= EVENT_CHANCE) return
+  await startEvent($, randomEvent())
+}
+
 export const register: Register = on => {
+  registerAmbiance(on)
+
   on('session.start', async ($, e, next) => {
     await $.command.register({ name: 'hud', description: 'Afficher / masquer la barre RAM Netrunner' })
     await $.command.register({ name: 'nightcity', description: 'Activer / couper le fond Night City' })
+    await $.command.register({ name: 'netfx', description: 'Activer / couper les évènements aléatoires du Net' })
     if (!(await read($, isThemeOff))) await applyTheme($)
-    // redraw the band every minute so the regen countdown stays current
-    $.clock.every(60_000, () => $.ui.invalidate('ui.render'))
+    if (!(await read($, isHidden))) setStatus($, statusFor(await read($, reading)))
+    $.clock.every(60_000, () => void minuteTick($))
+    lastEventAt = Date.now() // no event during the first minutes
+    await startBoot($)
     return next(e)
   })
 
   on('command.run', { command: 'hud' }, async $ => {
     const hidden = await update($, isHidden, v => !v)
+    setStatus($, hidden ? undefined : statusFor(await read($, reading)))
     return { text: hidden ? 'HUD Netrunner masqué.' : 'HUD Netrunner affiché.' }
   })
 
@@ -88,8 +156,15 @@ export const register: Register = on => {
     return {
       text: res.isDrawn
         ? 'Bienvenue à Night City, choom.'
-        : "Night City en attente : ta version de l'app ne dessine pas encore de fond. Il s'affichera tout seul après une mise à jour.",
+        : `Night City en attente : aucun fond dessiné pour l'instant (${res.reason}). Il s'affichera tout seul dès que l'app le permettra.`,
     }
+  })
+
+  on('command.run', { command: 'netfx' }, async $ => {
+    const off = await update($, isFxOff, v => !v)
+    if (off) return { text: 'Évènements aléatoires coupés.' }
+    if ((await read($, fx)) === null) await startEvent($, randomEvent())
+    return { text: 'Évènements aléatoires activés. Le Net s’agite…' }
   })
 
   // ── Background: Night City skyline (desktop / mobile) ──
@@ -144,6 +219,10 @@ export const register: Register = on => {
     const prev = await read($, reading)
     const lost = prev !== null && hearts < prev.hearts
     const healed = prev !== null && hearts > prev.hearts
+    // a hit: a RAM cell lost, or HP dropping into a lower tens
+    const hpNow = five ? 100 - five.percentUsed : null
+    const hpBefore = prev === null || prev.stamina === null ? null : 100 - prev.stamina
+    const hurt = lost || (hpNow !== null && hpBefore !== null && Math.floor(hpNow / 10) < Math.floor(hpBefore / 10))
 
     const fresh: Reading = {
       hearts,
@@ -153,10 +232,12 @@ export const register: Register = on => {
       burst: lost ? hearts : null,
       stamina: five ? five.percentUsed : null,
       resetsAt: five?.resetsAt ?? null,
+      hitAt: hurt ? Date.now() : null,
     }
     await update($, reading, () => fresh)
-
-    $.ui.status(undefined)
+    // redraw once the damage glitch is over, so it does not stay in the band
+    if (hurt) $.clock.after(GLITCH_MS + 50, () => redrawBand($))
+    if (!(await read($, isHidden))) setStatus($, statusFor(fresh))
 
     if (prev !== null) {
       // RAM (context)
@@ -179,19 +260,67 @@ export const register: Register = on => {
 
   // ── HP (token limit) + RAM (context) band above the prompt ──
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
-    const r = await read($, reading)
-    if (e.props.hasSurvey || r === null || (await read($, isHidden))) {
-      return next(e)
-    }
+    if (e.props.hasSurvey || (await read($, isHidden))) return next(e)
 
+    await read($, frame) // subscribes the band: bumping `frame` redraws it alone
     const els = $.ui.resolve(e)
     const { Box, Text } = els
+    const play = await read($, fx)
+    const playMs = play === null ? 0 : Date.now() - play.startedAt
+
+    // ── boot sequence, while the session starts ──
+    const bootMs = playMs
+    if (play?.kind === 'boot' && bootMs < BOOT_MS) {
+      if (e.surface === 'desktop' && 'Svg' in els) {
+        const { Svg } = els
+        return (
+          <Box>
+            <Svg source={bootSvg(bootMs)} alt="Séquence de démarrage du cyberdeck" />
+          </Box>
+        )
+      }
+      const step = Math.floor(bootMs / BOOT_STEP_MS)
+      const label = BOOT_STEPS[step]
+      const filled = Math.min(20, Math.ceil((bootMs / BOOT_MS) * 20))
+      const isOk = bootMs % BOOT_STEP_MS > BOOT_STEP_MS * 0.55
+      return (
+        <Box>
+          <Text mono>
+            {label === undefined ? (
+              <Text color={YELLOW} weight="bold">{'◢ JACK IN ◣'.padEnd(30)}</Text>
+            ) : (
+              <Text>
+                <Text color={CYAN}>{`> ${label} `}</Text>
+                <Text color={DIM}>{'.'.repeat(Math.max(3, 24 - label.length))}</Text>
+                <Text color={HP_COLOR} weight="bold">{isOk ? ' OK' : '   '}</Text>
+              </Text>
+            )}
+            <Text color={DIM}>{'  │  '}</Text>
+            <Text color={CYAN}>{'█'.repeat(filled)}</Text>
+            <Text color={DIM}>{'░'.repeat(20 - filled)}</Text>
+            <Text color={CYAN} tabular>{` ${Math.round((filled / 20) * 100)}%`.padStart(5)}</Text>
+          </Text>
+        </Box>
+      )
+    }
+
+    const r = await read($, reading)
+    if (r === null) return next(e)
+    const event = play?.kind === 'event' && playMs < EVENT_MS ? eventById(play.id) : undefined
+    const sinceHit = r.hitAt == null ? Number.POSITIVE_INFINITY : Date.now() - r.hitAt
+    const isHit = sinceHit < GLITCH_MS
+    // a hit glitches the band, and so does the start of an event
+    const glitchMs = isHit ? sinceHit : event && playMs < GLITCH_MS ? playMs : null
+
     if (e.surface === 'desktop' && 'Svg' in els) {
       const { Svg } = els
       const label = r.stamina === null ? 'HP inconnu' : `HP ${Math.round(100 - r.stamina)} sur 100`
       return (
         <Box>
-          <Svg source={hudSvg(r, flavor(r.hearts, r.percent), 20, MAX)} alt={`${label}, RAM ${r.hearts} sur ${MAX}`} />
+          <Svg source={hudSvg(r, flavor(r.hearts, r.percent), 20, MAX, {
+              glitchMs,
+              event: event ? { phases: event.phases, color: event.color, elapsedMs: playMs } : null,
+            })} alt={`${label}, RAM ${r.hearts} sur ${MAX}`} />
         </Box>
       )
     }
@@ -240,7 +369,15 @@ export const register: Register = on => {
           <Text color={ramColor} tabular>{` ${r.hearts}/${MAX}`}</Text>
           <Text color={DIM} tabular>{` (${fmtK(r.tokens)}/${fmtK(r.window)})`}</Text>
           {sep}
-          <Text color={r.hearts <= 2 ? RED : CYAN} italic>{flavor(r.hearts, r.percent)}</Text>
+          {event ? (
+            <Text color={phaseAt(playMs) === 2 ? CYAN : event.color} weight="bold">
+              {event.phases[phaseAt(playMs)]}
+            </Text>
+          ) : isHit ? (
+            <Text color={RED} weight="bold">▚▞ SIGNAL CORROMPU ▞▚</Text>
+          ) : (
+            <Text color={r.hearts <= 2 ? RED : CYAN} italic>{flavor(r.hearts, r.percent)}</Text>
+          )}
         </Text>
       </Box>
     )

@@ -11,10 +11,22 @@ export type Reading = {
   stamina: number | null
   /** When the 5-hour window resets (ISO 8601); absent on readings stored before this field existed */
   resetsAt?: string | null
+  /** When the last hit landed (ms since the epoch), for the damage glitch; absent on older readings */
+  hitAt?: number | null
 }
+
+/** What plays in the band: the boot sequence, or a random event by its id. */
+export type Fx = { kind: 'boot' | 'event'; id: string; startedAt: number }
 
 declare module 'claude-code' {
   interface PluginState {
-    'netrunner-hud': { reading: Reading | null; isHidden: boolean; isThemeOff: boolean }
+    'netrunner-hud': {
+      reading: Reading | null
+      isHidden: boolean
+      isThemeOff: boolean
+      isFxOff: boolean
+      fx: Fx | null
+      frame: number
+    }
   }
 }
