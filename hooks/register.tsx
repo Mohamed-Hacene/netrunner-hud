@@ -186,9 +186,9 @@ export const register: Register = on => {
 
     const els = $.ui.resolve(e)
     const { Box, Text } = els
-    if (e.surface === "desktop" && "Svg" in els) {
+    if (e.surface === 'desktop' && 'Svg' in els) {
       const { Svg } = els
-      const label = r.stamina === null ? "HP inconnu" : `HP ${Math.round(100 - r.stamina)} sur 100`
+      const label = r.stamina === null ? 'HP inconnu' : `HP ${Math.round(100 - r.stamina)} sur 100`
       return (
         <Box>
           <Svg source={hudSvg(r, flavor(r.hearts, r.percent), 20, MAX)} alt={`${label}, RAM ${r.hearts} sur ${MAX}`} />

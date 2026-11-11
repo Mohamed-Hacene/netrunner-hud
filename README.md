@@ -25,7 +25,9 @@
 - **Status line** that follows your state: `NEURAL LINK STABLE`, `SURCHAUFFE CYBERDECK`, `☠ FLATLINE`…
 - Drawn as SVG on desktop (slanted segments, glow, chromatic glitch), plain text in the terminal.
 
-**Night City backdrop**: neon skyline, setting sun, perspective grid and an animated scanline behind a tinted glass panel.
+**Night City backdrop** *(not supported by Claude Code yet)*: neon skyline, setting sun, perspective grid and an
+animated scanline behind a tinted glass panel. The mod already ships it, but no current version of Claude Code
+draws custom backdrops, so you will not see it for now. See [Compatibility](#compatibility).
 
 <p align="center">
   <img src="docs/night-city.svg" alt="Night City backdrop: neon sun behind a dark skyline over a red perspective grid" width="760">
@@ -73,17 +75,19 @@ To uninstall, delete the `~/.claude/mods/netrunner-hud` folder.
 
 | Surface | HP / RAM band | Backdrop | Quickhacks and spinner |
 |---|---|---|---|
-| Desktop app | SVG | ✅ (if your version can draw backdrops) | ✅ |
-| Terminal | Text | — | ✅ |
+| Desktop app | SVG | ❌ not supported yet | ✅ |
+| Terminal | Text | ❌ | ✅ |
 
-If your version of the app cannot draw backdrops yet, `/nightcity` tells you so and the backdrop shows up on its own after an update.
+> [!NOTE]
+> Claude Code does not draw custom backdrops at the moment. The Night City backdrop is included and ready:
+> `/nightcity` tells you it is waiting, and the backdrop will show up on its own once Claude Code supports it.
 
 ## Commands
 
 | Command | Effect |
 |---|---|
 | `/hud` | Show or hide the HP / RAM band |
-| `/nightcity` | Turn the Night City backdrop on or off |
+| `/nightcity` | Turn the Night City backdrop on or off (no visible effect until Claude Code supports backdrops) |
 
 Both settings are remembered between sessions.
 
@@ -94,7 +98,7 @@ Both settings are remembered between sessions.
 | `session.start` | Registers the commands, applies the theme, redraws the band every minute so the regen countdown stays current |
 | `session.measure` | Turns context usage and the `five_hour` rate limit into a `Reading` (RAM cells, HP), stores it, fires toasts on thresholds |
 | `ui.render` · `AbovePrompt` | Draws the HP / RAM band |
-| `ui.render` · `Backdrop` | Draws the Night City skyline |
+| `ui.render` · `Backdrop` | Draws the Night City skyline (not called by Claude Code yet) |
 | `ui.render` · `ToolUse` | Adds the quickhack tag under each tool row |
 | `ui.render` · `Spinner` | Swaps the spinner words for netrunning ones |
 

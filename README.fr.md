@@ -21,7 +21,9 @@
 - **Texte d'ambiance** selon l'état : `NEURAL LINK STABLE`, `SURCHAUFFE CYBERDECK`, `☠ FLATLINE`…
 - Rendu SVG dans l'app de bureau (segments inclinés, lueur, glitch chromatique), version texte dans le terminal.
 
-**Fond Night City** : skyline néon, soleil couchant, grille en perspective et ligne de balayage animée, derrière un panneau de verre teinté.
+**Fond Night City** *(pas encore pris en charge par Claude Code)* : skyline néon, soleil couchant, grille en
+perspective et ligne de balayage animée, derrière un panneau de verre teinté. Le mod l'inclut déjà, mais aucune
+version actuelle de Claude Code n'affiche de fond personnalisé : tu ne le verras donc pas pour l'instant.
 
 <p align="center">
   <img src="docs/night-city.svg" alt="Fond Night City : soleil néon derrière une skyline sombre au-dessus d'une grille rouge" width="760">
@@ -52,15 +54,16 @@ git -C ~/.claude/mods/netrunner-hud pull
 
 Pour désinstaller, supprimer le dossier `~/.claude/mods/netrunner-hud`.
 
-Si ta version de l'app ne sait pas encore dessiner de fond, `/nightcity` le signale et le fond apparaît tout seul
-après une mise à jour.
+> [!NOTE]
+> Claude Code n'affiche pas encore de fond personnalisé. Le fond Night City est inclus et prêt : `/nightcity`
+> indique qu'il est en attente, et il apparaîtra tout seul quand Claude Code le prendra en charge.
 
 ## Commandes
 
 | Commande | Effet |
 |---|---|
 | `/hud` | Affiche ou masque la barre HP / RAM |
-| `/nightcity` | Active ou coupe le fond Night City |
+| `/nightcity` | Active ou coupe le fond Night City (sans effet visible tant que Claude Code ne gère pas les fonds) |
 
 Les deux réglages sont conservés d'une session à l'autre.
 

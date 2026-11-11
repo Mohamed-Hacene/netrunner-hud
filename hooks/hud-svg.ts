@@ -54,7 +54,7 @@ export const hudSvg = (r: Reading, flavor: string, hpMax: number, ramMax: number
   parts.push(`<g filter="url(#glow)">`)
   for (let i = 0; i < hpMax; i++) {
     const x = hx + i * (segW + gap)
-    parts.push(i < filled ? cell(x, 13, segW, 14, hpColor, critical ? '' : '') : cell(x, 13, segW, 14, DIM))
+    parts.push(i < filled ? cell(x, 13, segW, 14, hpColor) : cell(x, 13, segW, 14, DIM))
   }
   parts.push(`</g>`)
   if (critical) parts.push(`<g opacity="1">${pulse}<rect x="${hx - 2}" y="11" width="${hpMax * (segW + gap) + 6}" height="18" fill="none" stroke="${RED}" stroke-width="1"/></g>`)

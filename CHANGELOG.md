@@ -6,6 +6,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Changed
+
+- Removed a no-op expression in the HP bar rendering and normalized string quotes.
+
+### Documentation
+
+- Stated that the Night City backdrop is not supported by Claude Code yet.
+
 ## [0.1.0] - 2026-11-11
 
 ### Added
